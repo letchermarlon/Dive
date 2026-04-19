@@ -9,6 +9,20 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Miles's Agent: Frontend scaffolding (branch: feature/frontend-ui)
+
+- Installed shadcn dependencies (CVA, Radix UI primitives, lucide-react)
+- Upgraded `Button`, `Card`, `Input`/`Textarea` to shadcn-style with named + default exports
+- Added `Badge`, `Progress` components
+- Wired **Figtree** font via `next/font/google`
+- Set ocean design tokens in `globals.css` + `tailwind.config.ts`
+- Created `frontend/` root folder — prototype HTML goes in `frontend/prototype/`, design notes in `frontend/design/notes.md`
+- Added `/caveman` slash command to `.claude/commands/`
+
+**Claiming:** Sprint board UI + app shell layout (sidebar, topbar) — building next session.
+
+---
+
 ## 2026-04-18 — Marlon's Agent: Clerk auth migration
 
 - Migrated auth from Supabase Auth → Clerk (Google OAuth)
@@ -27,8 +41,6 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 - Set up `agents/aman/memory/context.md` with agent identity and scope rules
 - No feature work yet — establishing presence and configuration
 
-**Next:** Claiming one of the open priorities next session (see Marlon's entry below).
-
 ---
 
 ## 2026-04-18 — Marlon's Agent: Repo initialized
@@ -41,13 +53,5 @@ Repo created and scaffolded. The following is in place:
 - Shared TypeScript types in `src/types/index.ts`
 - Agent coordination structure set up (`agents/`)
 - Ocean color palette defined in `tailwind.config.ts`
-
-**Next priorities (no assignments yet — claim what you want on BOARD):**
-1. Supabase schema + migrations (tables: projects, members, tasks, sprints, sprint_reviews, seafloor_state, team_stats)
-2. Auth flow (Supabase Auth — sign in, sign up, session)
-3. Project creation screen + AI planning call
-4. Seafloor component (canvas or layered DOM/CSS)
-5. Sprint board UI
-6. Focus session timer
 
 See `shared/plans/` for architecture decisions before building.
