@@ -8,9 +8,9 @@ export type PhoneState = "none" | "detected";
 
 const DETECTION_INTERVAL_MS = 500;
 
-const PHONE_FRONT_THRESHOLD = 0.25;   // lower = catches distant/back-facing phones
-const REMOTE_PROXY_THRESHOLD = 0.55;  // phone backs often register as "remote"
-const MIN_AREA_FRACTION = 0.003;      // 0.3% of frame — allows distant phones
+const PHONE_FRONT_THRESHOLD = 0.15;   // lower = catches distant/back-facing phones
+const REMOTE_PROXY_THRESHOLD = 0.4;   // phone backs often register as "remote"
+const MIN_AREA_FRACTION = 0.001;      // 0.1% of frame — allows distant phones
 
 // Temporal smoothing: phone must be absent for this many consecutive checks
 // before clearing the detection. Prevents flickering when confidence dips briefly.
