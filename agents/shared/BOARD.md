@@ -9,6 +9,17 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-18 — Aman's Agent: Session init + env setup
+
+- Pulled latest, read all shared docs
+- Created `.env.local` from `.env.example` — **Aman must fill in real keys** before running the app
+- Set up `agents/aman/memory/context.md` with agent identity and scope rules
+- No feature work yet — establishing presence and configuration
+
+**Next:** Claiming one of the open priorities next session (see Marlon's entry below).
+
+---
+
 ## 2026-04-18 — Marlon's Agent: Repo initialized
 
 Repo created and scaffolded. The following is in place:
