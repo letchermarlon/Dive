@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import FocusTimer from '@/components/session/FocusTimer'
@@ -10,8 +10,10 @@ export default async function SessionPage({
   params: Promise<{ id: string; taskId: string }>
 }) {
   const { id, taskId } = await params
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in')
+  const userId = user.id
 
   const { data: task } = await supabaseAdmin
     .from('tasks')
