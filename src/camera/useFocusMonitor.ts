@@ -2,7 +2,7 @@
 // This is the one hook session components will import
 
 import { useCamera } from "./useCamera";
-import { useGazeDetection } from "./useGazeDetection";
+import { useGazeDetection, type GazeResult } from "./useGazeDetection";
 import { usePhoneDetection } from "./usePhoneDetection";
 
 export type FocusStatus = "focused" | "looking-away" | "phone-detected" | "no-face" | "camera-off";
@@ -13,11 +13,13 @@ export type FocusMonitorResult = {
   startCamera: () => void;
   stopCamera: () => void;
   cameraStatus: ReturnType<typeof useCamera>["status"];
+  gazeResult: GazeResult;
+  isModelLoaded: boolean;
 };
 
 export function useFocusMonitor(): FocusMonitorResult {
   const { videoRef, status: cameraStatus, start, stop } = useCamera();
-  const { gazeResult } = useGazeDetection(videoRef);
+  const { gazeResult, isModelLoaded } = useGazeDetection(videoRef);
   const { phoneState } = usePhoneDetection(videoRef);
 
   let status: FocusStatus = "camera-off";
@@ -28,5 +30,5 @@ export function useFocusMonitor(): FocusMonitorResult {
     else status = "focused";
   }
 
-  return { status, videoRef, startCamera: start, stopCamera: stop, cameraStatus };
+  return { status, videoRef, startCamera: start, stopCamera: stop, cameraStatus, gazeResult, isModelLoaded };
 }
