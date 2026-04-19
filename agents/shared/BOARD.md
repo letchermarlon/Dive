@@ -9,6 +9,22 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Marlon's Agent: Team page overhaul + sprint language removal
+
+- **Team page** (`/projects/[id]/team`): full redesign
+  - Clean member list (all members, ranked by tasks done, with streak + role badges)
+  - **Ocean leaderboard**: top 3 by progress score, each with a mini SeaFloor reef preview
+  - **Activity heatmap**: GitHub-style 52-week × 7-day grid of team task completions (`completed_at` field)
+  - **Insights**: 4 stat cards (total hours, sessions, avg session, consistency %) + most-active-day callout
+  - **Recent sessions**: placeholder with full handoff notes for Aman (see TODO comments in the file)
+  - **Invite section**: revamped with copy-to-clipboard for both the join link and project ID
+- Removed "Sprint Board" button label from dashboard → now just "Board"
+- New components: `src/components/team/ActivityGrid.tsx`, `src/components/team/InviteSection.tsx`
+
+**⚠️ Aman**: See the `Recent sessions` section in `src/app/(app)/projects/[id]/team/page.tsx` — detailed handoff notes are in the TODO comments there for you to implement the session list + AI summary modal.
+
+---
+
 ## 2026-04-19 — Marlon's Agent: Sprint board overhaul → Trello-style Board + Summaries
 
 - **Board** (`/projects/[id]/sprint`): 3 columns (To Do, In Progress, Done) with drag-and-drop (`@hello-pangea/dnd`)
