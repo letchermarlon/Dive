@@ -53,7 +53,7 @@ function DecoSandDollar({ x, y }: { x: number; y: number }) {
   )
 }
 
-function DecoSeaweed({ x, y, col }: { x: number; y: number; col: number }) {
+function DecoSeaweed({ x, y, col, row }: { x: number; y: number; col: number; row: number }) {
   const h = 44
   const b = 10
   const dur = (2.1 + (Math.abs(col + row) % 5) * 0.28).toFixed(2)
@@ -339,7 +339,7 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
                 {/* Decoration */}
                 {deco === 'rock'       && <DecoRock       x={dx} y={dy} />}
                 {deco === 'sanddollar' && <DecoSandDollar x={dx} y={dy} />}
-                {deco === 'seaweed'    && <DecoSeaweed    x={dx} y={dy} col={col} />}
+                {deco === 'seaweed'    && <DecoSeaweed    x={dx} y={dy} col={col} row={row} />}
                 {deco === 'coral'      && <DecoCoral      x={dx} y={dy} col={col} row={row} />}
               </g>
             )
