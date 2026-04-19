@@ -27,7 +27,9 @@ agents/
   shared/             ← Cross-team communication (everyone reads and writes)
     BOARD.md          ← READ FIRST — status updates, handoffs, blockers
     CHANGELOG.md      ← Feature additions and changes (user-facing)
-    SKILL.md          ← Architecture rules all agents must follow
+    skills/           ← Skill definitions for all agents
+      SKILL.md        ← Architecture rules all agents must follow
+      caveman.md      ← Ultra-compressed caveman communication mode
     plans/            ← Shared implementation designs and decisions
 ```
 
@@ -37,7 +39,7 @@ agents/
 2. **During work:** Log progress in your own `logs/` folder
 3. **End of session:** Add a short entry to the TOP of `shared/BOARD.md`
 4. **Before building a feature:** Check `shared/plans/` for existing decisions
-5. **Follow the rules:** `shared/SKILL.md` is the architecture standard — all new code must comply
+5. **Follow the rules:** `shared/skills/SKILL.md` is the architecture standard — all new code must comply
 
 ## Rules
 

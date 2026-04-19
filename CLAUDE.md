@@ -14,7 +14,7 @@ Team-based focus and planning platform with personal ocean ecosystem progression
 
 1. `git pull origin main`
 2. Read [`agents/shared/BOARD.md`](agents/shared/BOARD.md) — see what changed
-3. Read [`agents/shared/SKILL.md`](agents/shared/SKILL.md) — architecture rules you must follow
+3. Read [`agents/shared/skills/SKILL.md`](agents/shared/skills/SKILL.md) — architecture rules you must follow
 4. Check [`agents/shared/plans/`](agents/shared/plans/) before building anything non-trivial
 
 ## End of every session
@@ -40,7 +40,7 @@ Team-based focus and planning platform with personal ocean ecosystem progression
 - [`src/types/index.ts`](src/types/index.ts) — canonical data model, extend here
 - [`src/lib/gemini.ts`](src/lib/gemini.ts) — Gemini client, use `generateJSON<T>()`
 - [`src/lib/supabase.ts`](src/lib/supabase.ts) — Supabase clients
-- [`agents/shared/SKILL.md`](agents/shared/SKILL.md) — architecture rules
+- [`agents/shared/skills/SKILL.md`](agents/shared/skills/SKILL.md) — architecture rules
 - [`agents/shared/BOARD.md`](agents/shared/BOARD.md) — team communication board
 
 ## Environment
