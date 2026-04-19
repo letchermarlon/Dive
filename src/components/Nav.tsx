@@ -1,11 +1,17 @@
 'use client'
+
 import Link from 'next/link'
-import { useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 export default function Nav() {
-  const { signOut } = useClerk()
   const router = useRouter()
+
+  async function handleSignOut() {
+    const supabase = createSupabaseBrowserClient()
+    await supabase.auth.signOut()
+    router.push('/sign-in')
+  }
 
   return (
     <nav className="border-b border-ocean-800 bg-ocean-950 px-6 py-3 flex items-center justify-between">
@@ -17,7 +23,7 @@ export default function Nav() {
           Dashboard
         </Link>
         <button
-          onClick={() => signOut(() => router.push('/sign-in'))}
+          onClick={handleSignOut}
           className="text-ocean-400 hover:text-ocean-200 text-sm transition-colors"
         >
           Sign out

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { AIPlanOutput } from '@/types'
 
 export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = user.id
 
   const { data } = await supabaseAdmin
     .from('project_members')
@@ -16,42 +17,19 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = user.id
 
-  const body = await request.json()
-
-  if (body.completeSprintId && body.nextSprint) {
-    await supabaseAdmin
-      .from('sprints')
-      .update({ status: 'complete', ended_at: new Date().toISOString() })
-      .eq('id', body.completeSprintId)
-
-    const { data: sprint } = await supabaseAdmin
-      .from('sprints')
-      .insert({ project_id: body.projectId, title: 'Next sprint', status: 'active' })
-      .select('id')
-      .single()
-
-    if (sprint) {
-      const tasks = (body.nextSprint as { title: string; description: string }[]).map(t => ({
-        project_id: body.projectId,
-        sprint_id: sprint.id,
-        title: t.title,
-        description: t.description,
-        status: 'todo',
-      }))
-      await supabaseAdmin.from('tasks').insert(tasks)
-    }
-
-    return NextResponse.json({ ok: true })
+  const { name, goal } = await request.json()
+  if (!name || typeof name !== 'string' || name.length > 200) {
+    return NextResponse.json({ error: 'Invalid project name' }, { status: 400 })
   }
-
-  const { name, goal, plan } = body as { name: string; goal: string; plan: AIPlanOutput }
 
   const { data: project, error } = await supabaseAdmin
     .from('projects')
-    .insert({ name, goal, description: plan.projectSummary, created_by: userId })
+    .insert({ name, goal: goal ?? '', description: goal ?? '', created_by: userId })
     .select('id')
     .single()
 
@@ -64,29 +42,6 @@ export async function POST(request: NextRequest) {
     supabaseAdmin.from('seafloor_state').insert({ user_id: userId, project_id: projectId }),
     supabaseAdmin.from('team_stats').insert({ user_id: userId, project_id: projectId }),
   ])
-
-  const { data: sprint } = await supabaseAdmin
-    .from('sprints')
-    .insert({ project_id: projectId, title: 'Sprint 1', goal: plan.recommendedFirstStep, status: 'active' })
-    .select('id')
-    .single()
-
-  if (sprint) {
-    const sprintTasks = plan.currentSprint.map(t => ({
-      project_id: projectId,
-      sprint_id: sprint.id,
-      title: t.title,
-      description: t.description,
-      status: 'todo',
-    }))
-    const backlogTasks = plan.backlog.map(t => ({
-      project_id: projectId,
-      title: t.title,
-      description: t.description,
-      status: 'backlog',
-    }))
-    await supabaseAdmin.from('tasks').insert([...sprintTasks, ...backlogTasks])
-  }
 
   return NextResponse.json({ projectId })
 }

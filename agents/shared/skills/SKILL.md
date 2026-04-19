@@ -1,9 +1,9 @@
 ---
-name: tidesprint-engineer
-description: Build and extend the Dive (TideSprint) web app using Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Gemini API. Follow these rules for all new code.
+name: dive-engineer
+description: Build and extend the Dive web app using Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Gemini API. Follow these rules for all new code.
 ---
 
-# TideSprint Engineer
+# Dive Engineer
 
 ## Overview
 

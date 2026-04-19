@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { generateJSON } from '@/lib/gemini'
 import { projectPlanPrompt } from '@/lib/prompts'
 import { checkAIRateLimit } from '@/lib/ratelimit'
@@ -23,8 +23,10 @@ const FALLBACK: AIPlanOutput = {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = user.id
 
   const allowed = await checkAIRateLimit(userId)
   if (!allowed) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
