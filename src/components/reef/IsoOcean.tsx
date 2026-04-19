@@ -233,6 +233,9 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
     setDragging(false)
   }, [])
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { const id = requestAnimationFrame(() => setMounted(true)); return () => cancelAnimationFrame(id) }, [])
+
   const alpha = Math.max(0.45, healthScore / 100)
   const gx = SVG_W / 2 + panX
   const gy = SVG_H / 2 + panY
@@ -356,7 +359,7 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
 
           {/* Fish — same plane as island, fade in/out via opacity */}
           {FISH_POOL.map((cfg, i) => (
-            <g key={i} style={{ opacity: i < fishCount ? 1 : 0, transition: 'opacity 1.2s ease' }}>
+            <g key={i} style={{ opacity: mounted && i < fishCount ? 1 : 0, transition: 'opacity 1.2s ease' }}>
               <IsoFish {...cfg} />
             </g>
           ))}
