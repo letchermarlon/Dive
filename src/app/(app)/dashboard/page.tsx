@@ -8,6 +8,7 @@ import { DeleteProjectButton } from '@/components/DeleteProjectButton'
 import OceanBackground from '@/components/OceanBackground'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
@@ -53,17 +54,23 @@ export default async function DashboardPage() {
             </div>
 
             {projects.length === 0 && (
-              <div className="rounded-[1.75rem] p-12 text-center" style={{ background: '#0d1f2e' }}>
-                <div className="text-5xl mb-4">🌊</div>
-                <p className="font-semibold text-white">Your ocean is empty</p>
-                <p className="text-sm mt-1 text-white/50">Create your first project to start growing your reef.</p>
-                <Link
-                  href="/projects/new"
-                  className="inline-block mt-4 px-4 py-2 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition-colors"
-                >
-                  Create project
-                </Link>
-              </div>
+              <Empty className="rounded-[1.75rem] border-none py-16">
+                <EmptyHeader>
+                  <EmptyMedia className="size-24 rounded-3xl bg-white/10 text-white mb-6 [&_svg]:size-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  </EmptyMedia>
+                  <EmptyTitle className="text-white text-3xl font-bold">No projects yet</EmptyTitle>
+                  <EmptyDescription className="text-white/50 text-base">You haven&apos;t created any projects yet. Get started by creating your first project.</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Link
+                    href="/projects/new"
+                    className="px-8 py-3 rounded-2xl text-base font-semibold text-black bg-white hover:opacity-90 transition-opacity"
+                  >
+                    Create project
+                  </Link>
+                </EmptyContent>
+              </Empty>
             )}
 
             <div className="grid gap-6 md:grid-cols-2">
