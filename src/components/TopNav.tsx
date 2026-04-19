@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -17,9 +18,13 @@ export default function TopNav() {
     <nav className="px-6 py-4">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm bg-gradient-to-br from-[#3282b8] to-[#bbe1fa]">
-            🌊
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Dive logo"
+            width={28}
+            height={28}
+            className="rounded-lg"
+          />
           <span className="font-bold text-base tracking-tight text-white">Dive</span>
         </Link>
         <button

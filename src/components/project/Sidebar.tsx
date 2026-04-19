@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
@@ -45,12 +46,13 @@ export default function Sidebar({ projectId, projectName, userName, userInitials
       }}
     >
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-7">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #3282b8, #bbe1fa)' }}
-        >
-          🌊
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Dive logo"
+          width={32}
+          height={32}
+          className="rounded-lg flex-shrink-0"
+        />
         <span className="font-bold text-base truncate" style={{ color: '#bbe1fa', letterSpacing: '-0.3px' }}>
           Dive
         </span>
