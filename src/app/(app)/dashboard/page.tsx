@@ -100,13 +100,6 @@ export default async function DashboardPage() {
                   >
                     My Ocean
                   </Link>
-                  <Link
-                    href={`/projects/${project.id}/sprint`}
-                    className="flex-1 text-center py-2 rounded-lg text-sm font-medium transition-colors"
-                    style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)', color: '#bbe1fa' }}
-                  >
-                    Board
-                  </Link>
                 </div>
                 {project.role === 'owner' && (
                   <DeleteProjectButton projectId={project.id} />

@@ -26,6 +26,8 @@ interface Props {
   currentUserId: string
   members: Member[]
   memberNames: Record<string, string>
+  hideHeader?: boolean
+  onProgressChange?: (delta: number) => void
 }
 
 const COLS: { key: Status; label: string; color: string }[] = [
@@ -47,7 +49,7 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[h]
 }
 
-export default function SprintBoardClient({ projectId, projectName, initialTasks, members, memberNames }: Props) {
+export default function SprintBoardClient({ projectId, projectName, initialTasks, members, memberNames, hideHeader, onProgressChange }: Props) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [addingTitle, setAddingTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
@@ -197,6 +199,8 @@ export default function SprintBoardClient({ projectId, projectName, initialTasks
       setSubmitting(false)
       return
     }
+    const doneCount = tasks.filter(t => t.status === 'done').length
+    if (onProgressChange) onProgressChange(doneCount)
     setTasks(prev => prev.filter(t => t.status !== 'done'))
     setShowConfirm(false)
     setSubmitting(false)
@@ -267,14 +271,16 @@ export default function SprintBoardClient({ projectId, projectName, initialTasks
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Topbar */}
-      <div style={{ ...S.topbar, padding: '14px 28px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 17, color: '#bbe1fa' }}>Board</div>
-          <div style={{ fontSize: 12, color: 'rgba(187,225,250,0.5)', marginTop: 2 }}>
-            {projectName} · {members.length} member{members.length !== 1 ? 's' : ''}
+      {!hideHeader && (
+        <div style={{ ...S.topbar, padding: '14px 28px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 17, color: '#bbe1fa' }}>Board</div>
+            <div style={{ fontSize: 12, color: 'rgba(187,225,250,0.5)', marginTop: 2 }}>
+              {projectName} · {members.length} member{members.length !== 1 ? 's' : ''}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Error banner */}
       {submitError && (

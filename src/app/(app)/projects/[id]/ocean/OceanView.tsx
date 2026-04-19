@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import IsoOcean from '@/components/reef/IsoOcean'
 import FocusModal from '@/components/session/FocusModal'
+import SprintBoardClient from '@/components/sprint/SprintBoardClient'
 
 type Status = 'todo' | 'doing' | 'done'
 
@@ -14,35 +15,43 @@ interface Task {
   members: string[]
 }
 
+interface Member {
+  id: string
+  name: string
+}
+
 interface OceanViewProps {
   projectId: string
+  projectName: string
   tasks: Task[]
+  allTasks: Task[]
+  members: Member[]
+  memberNames: Record<string, string>
+  currentUserId: string
   progressScore: number
   healthScore: number
   streakDays: number
-  doneTasks: number
 }
 
-
 export default function OceanView({
-  projectId, tasks: initialTasks, progressScore: initialScore,
-  healthScore, streakDays, doneTasks: initialDone,
+  projectId, projectName, tasks: initialTasks, allTasks,
+  members, memberNames, currentUserId,
+  progressScore: initialScore, healthScore, streakDays,
 }: OceanViewProps) {
   const [tasks, setTasks] = useState(initialTasks)
   const [progressScore, setProgressScore] = useState(initialScore)
-  const [doneTasks, setDoneTasks] = useState(initialDone)
   const [focusTask, setFocusTask] = useState<Task | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 3500)
   }
 
-function handleFocusComplete(taskId: string) {
+  function handleFocusComplete(taskId: string) {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t))
     setProgressScore(s => s + 1)
-    setDoneTasks(d => d + 1)
     showToast('🎉 Focus session complete! Ocean is growing.')
   }
 
@@ -80,9 +89,35 @@ function handleFocusComplete(taskId: string) {
         )}
       </div>
 
-      {/* Ocean visual */}
-      <IsoOcean progressScore={progressScore} healthScore={healthScore} streakDays={streakDays} />
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(187,225,250,0.12) transparent' }}>
 
+        {/* Ocean visual */}
+        <IsoOcean progressScore={progressScore} healthScore={healthScore} streakDays={streakDays} />
+
+        {/* Board section */}
+        <div style={{ borderTop: '1px solid rgba(187,225,250,0.08)' }}>
+          <div style={{ padding: '16px 28px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 14 }}>📋</span>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(187,225,250,0.5)' }}>
+              Board
+            </span>
+          </div>
+          <div style={{ height: 560 }}>
+            <SprintBoardClient
+              projectId={projectId}
+              projectName={projectName}
+              initialTasks={allTasks}
+              currentUserId={currentUserId}
+              members={members}
+              memberNames={memberNames}
+              hideHeader
+              onProgressChange={delta => setProgressScore(s => s + delta)}
+            />
+          </div>
+        </div>
+
+      </div>
 
       {/* Focus modal */}
       {focusTask && (
