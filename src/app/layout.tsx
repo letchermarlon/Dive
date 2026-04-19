@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs';
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const figtree = Figtree({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-figtree",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -14,18 +13,12 @@ export const metadata: Metadata = {
   description: "Team-based focus and planning platform with personal ocean ecosystem progression.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={figtree.variable}>
-        <body className="min-h-screen bg-background text-foreground antialiased font-sans">
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
+        {children}
+      </body>
+    </html>
   );
 }

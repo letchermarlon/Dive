@@ -1,17 +1,14 @@
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import FocusTimer from '@/components/session/FocusTimer'
 import Card from '@/components/ui/Card'
 
-export default async function SessionPage({
-  params,
-}: {
-  params: Promise<{ id: string; taskId: string }>
-}) {
+export default async function SessionPage({ params }: { params: Promise<{ id: string; taskId: string }> }) {
   const { id, taskId } = await params
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in')
 
   const { data: task } = await supabaseAdmin
     .from('tasks')
@@ -24,7 +21,7 @@ export default async function SessionPage({
   const { data: session } = await supabaseAdmin
     .from('focus_sessions')
     .insert({
-      user_id: userId,
+      user_id: user.id,
       task_id: taskId,
       project_id: id,
       duration_minutes: 25,

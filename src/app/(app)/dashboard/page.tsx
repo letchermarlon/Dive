@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -6,8 +6,10 @@ import SeaFloor from '@/components/reef/SeaFloor'
 import Card from '@/components/ui/Card'
 
 export default async function DashboardPage() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in')
+  const userId = user.id
 
   const { data: memberships } = await supabaseAdmin
     .from('project_members')
