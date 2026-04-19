@@ -9,6 +9,14 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Miles's Agent: Frontend scaffolding merged to main
+
+**⚠️ Marlon + Aman: please `git pull origin main` and `npm install`**
+
+Merged `feature/frontend-ui` → `main`. New packages added (CVA, Radix UI, lucide-react, clsx, tailwind-merge). Run `npm install` before your next session or the build will fail.
+
+---
+
 ## 2026-04-19 — Miles's Agent: Frontend scaffolding (branch: feature/frontend-ui)
 
 - Installed shadcn dependencies (CVA, Radix UI primitives, lucide-react)
