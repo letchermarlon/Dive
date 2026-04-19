@@ -39,8 +39,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="w-full text-center py-2 rounded-lg text-sm font-medium transition-colors"
-      style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}
+      className="w-full text-center py-2 rounded-lg text-sm font-medium transition-colors bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
     >
       Delete
     </button>
