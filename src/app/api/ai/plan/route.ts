@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { generateJSON } from '@/lib/gemini'
 import { projectPlanPrompt } from '@/lib/prompts'
+import { checkAIRateLimit } from '@/lib/ratelimit'
 import { AIPlanOutput } from '@/types'
 
 const FALLBACK: AIPlanOutput = {
@@ -25,8 +26,17 @@ export async function POST(request: NextRequest) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const allowed = await checkAIRateLimit(userId)
+  if (!allowed) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+
   const { goal, teamSize = 1 } = await request.json()
   if (!goal) return NextResponse.json({ error: 'Goal is required' }, { status: 400 })
+  if (typeof goal !== 'string' || goal.length > 1000) {
+    return NextResponse.json({ error: 'Goal must be 1000 characters or fewer' }, { status: 400 })
+  }
+  if (typeof teamSize !== 'number' || teamSize < 1 || teamSize > 100) {
+    return NextResponse.json({ error: 'Invalid team size' }, { status: 400 })
+  }
 
   try {
     const plan = await generateJSON<AIPlanOutput>(projectPlanPrompt(goal, teamSize))

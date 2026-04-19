@@ -9,8 +9,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { status } = await request.json()
 
+  const VALID_STATUSES = ['backlog', 'todo', 'doing', 'done', 'blocked'] as const
+  type TaskStatus = typeof VALID_STATUSES[number]
+  if (!VALID_STATUSES.includes(status as TaskStatus)) {
+    return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+  }
+
   const { data: task } = await supabaseAdmin.from('tasks').select('project_id, status').eq('id', id).single()
   if (!task) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const { data: membership } = await supabaseAdmin
+    .from('project_members')
+    .select('id')
+    .eq('project_id', task.project_id)
+    .eq('user_id', userId)
+    .single()
+
+  if (!membership) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   await supabaseAdmin.from('tasks').update({ status }).eq('id', id)
 

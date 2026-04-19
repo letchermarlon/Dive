@@ -7,6 +7,14 @@ export default async function JoinProjectPage({ params }: { params: Promise<{ id
   const { userId } = await auth()
   if (!userId) redirect(`/sign-in?next=/join/${id}`)
 
+  const { data: project } = await supabaseAdmin
+    .from('projects')
+    .select('id')
+    .eq('id', id)
+    .single()
+
+  if (!project) redirect('/dashboard')
+
   const { data: existing } = await supabaseAdmin
     .from('project_members')
     .select('id')

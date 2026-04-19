@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { generateJSON } from '@/lib/gemini'
 import { sprintReviewPrompt } from '@/lib/prompts'
+import { checkAIRateLimit } from '@/lib/ratelimit'
 import { AIReviewOutput } from '@/types'
 
 const FALLBACK: AIReviewOutput = {
@@ -20,7 +21,30 @@ export async function POST(request: NextRequest) {
   const { userId } = await auth()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const allowed = await checkAIRateLimit(userId)
+  if (!allowed) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+
   const { sprintId, projectId, completed, blocked, improvement } = await request.json()
+
+  if (!sprintId || !projectId || !completed) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+  if (
+    typeof completed !== 'string' || completed.length > 2000 ||
+    (blocked && (typeof blocked !== 'string' || blocked.length > 2000)) ||
+    (improvement && (typeof improvement !== 'string' || improvement.length > 2000))
+  ) {
+    return NextResponse.json({ error: 'Input too long' }, { status: 400 })
+  }
+
+  const { data: membership } = await supabaseAdmin
+    .from('project_members')
+    .select('id')
+    .eq('project_id', projectId)
+    .eq('user_id', userId)
+    .single()
+
+  if (!membership) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: backlogTasks } = await supabaseAdmin
     .from('tasks')

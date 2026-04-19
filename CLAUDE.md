@@ -21,7 +21,8 @@ Team-based focus and planning platform with personal ocean ecosystem progression
 
 1. Add a short entry to the TOP of [`agents/shared/BOARD.md`](agents/shared/BOARD.md)
 2. If you made a user-facing change, add a line to [`agents/shared/CHANGELOG.md`](agents/shared/CHANGELOG.md)
-3. Commit and push your changes to `main`
+3. If you added a new service, library, or integration, update [`agents/shared/TECH_STACK.md`](agents/shared/TECH_STACK.md)
+4. Commit and push your changes to `main`
 
 ## Tech stack
 
