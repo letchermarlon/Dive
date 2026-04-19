@@ -14,7 +14,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { memberNames } = await request.json() as { memberNames: Record<string, string> }
 
-  // Verify membership
   const { data: membership } = await supabaseAdmin
     .from('project_members')
     .select('id')
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .single()
   if (!membership) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Get all done tasks
   const { data: doneTasks } = await supabaseAdmin
     .from('tasks')
     .select('*')
@@ -34,7 +32,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'No done tasks to submit' }, { status: 400 })
   }
 
-  // Validate all done tasks have at least one member
   const tasksMissingMembers = doneTasks.filter(t => !t.members || (t.members as string[]).length === 0)
   if (tasksMissingMembers.length > 0) {
     return NextResponse.json({
@@ -45,36 +42,75 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const now = new Date()
   const submittedAt = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const submittedTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
-  // Build summary prompt
+  // Build per-task detail for the prompt
   const taskLines = doneTasks.map(t => {
     const names = (t.members as string[]).map((uid: string) => memberNames[uid] ?? 'Unknown').join(', ')
-    return `- "${t.title}" — completed by: ${names}`
+    const desc = t.description ? `\n  Description: ${t.description}` : ''
+    return `- "${t.title}" — completed by: ${names}${desc}`
   }).join('\n')
 
-  const prompt = `You are writing a completion summary for a team project board. Write a concise, encouraging paragraph (3-5 sentences) summarizing what the team accomplished. Then list who completed what. Be specific and human. Do not use bullet points in the paragraph — write it as flowing prose.
+  // Build per-person breakdown for the prompt
+  const personTasks: Record<string, string[]> = {}
+  for (const t of doneTasks) {
+    for (const uid of (t.members as string[])) {
+      const name = memberNames[uid] ?? 'Unknown'
+      if (!personTasks[name]) personTasks[name] = []
+      personTasks[name].push(t.title)
+    }
+  }
+  const personLines = Object.entries(personTasks)
+    .map(([name, tasks]) => `- ${name}: ${tasks.join(', ')}`)
+    .join('\n')
 
-Date: ${submittedAt}
+  const prompt = `You are writing a detailed, professional completion summary for a collaborative project board. The team just submitted their completed tasks. Write a comprehensive summary using EXACTLY the section structure below. Be warm, specific, and detailed. Write as if you are a thoughtful team lead reviewing the work.
+
+Submission date: ${submittedAt} at ${submittedTime}
+Total tasks completed: ${doneTasks.length}
+
 Completed tasks:
 ${taskLines}
 
-Return plain text only. No markdown headers. Start with the prose paragraph, then a line break, then a brief attribution list like "• Task name — Person Name".`
+Team contributions:
+${personLines}
+
+Use EXACTLY this format with these EXACT section headers (uppercase, on their own line):
+
+OVERVIEW
+[Write 3-5 sentences of engaging narrative prose. Describe the nature of the work, what the team set out to do, the effort involved, and the overall impact of completing these tasks. Make it feel human and meaningful — not generic.]
+
+WHAT WAS ACCOMPLISHED
+[For each task, write a bullet starting with •. Include the task name in quotes, who completed it, and 1-2 sentences explaining what the completion of this task means for the project. Be specific.]
+
+TEAM CONTRIBUTIONS
+[For each person involved, write a bullet starting with •. State their name, list the tasks they worked on, and write 1 sentence about their contribution style or impact.]
+
+HIGHLIGHTS
+[Write 2-4 bullet points starting with • about what's most notable or worth celebrating from this batch of completions. Could be collaboration, quantity, quality, difficulty of tasks, etc.]
+
+SUBMITTED
+${submittedAt} at ${submittedTime} · ${doneTasks.length} task${doneTasks.length !== 1 ? 's' : ''} completed
+
+Return plain text only. No markdown. Use exactly the section headers shown.`
 
   let summaryContent = ''
   try {
     const result = await model.generateContent(prompt)
     summaryContent = result.response.text().trim()
   } catch {
-    // Fallback summary
-    const names = [...new Set(doneTasks.flatMap(t => (t.members as string[]).map((uid: string) => memberNames[uid] ?? 'Unknown')))]
-    summaryContent = `The team completed ${doneTasks.length} task${doneTasks.length !== 1 ? 's' : ''} on ${submittedAt}. Great work by ${names.join(', ')}.\n\n` +
+    // Structured fallback
+    const allNames = [...new Set(doneTasks.flatMap(t => (t.members as string[]).map((uid: string) => memberNames[uid] ?? 'Unknown')))]
+    summaryContent = `OVERVIEW\nThe team completed ${doneTasks.length} task${doneTasks.length !== 1 ? 's' : ''} on ${submittedAt}. Great collaborative effort from ${allNames.join(', ')}. Each task moved the project forward in a meaningful way.\n\nWHAT WAS ACCOMPLISHED\n` +
       doneTasks.map(t => {
         const names = (t.members as string[]).map((uid: string) => memberNames[uid] ?? 'Unknown').join(', ')
-        return `• ${t.title} — ${names}`
-      }).join('\n')
+        return `• "${t.title}" — completed by ${names}.`
+      }).join('\n') +
+      `\n\nTEAM CONTRIBUTIONS\n` +
+      Object.entries(personTasks).map(([name, tasks]) => `• ${name}: ${tasks.join(', ')}.`).join('\n') +
+      `\n\nHIGHLIGHTS\n• ${doneTasks.length} task${doneTasks.length !== 1 ? 's' : ''} successfully completed and submitted.\n• Strong team effort from ${allNames.join(', ')}.\n\nSUBMITTED\n${submittedAt} at ${submittedTime} · ${doneTasks.length} task${doneTasks.length !== 1 ? 's' : ''} completed`
   }
 
-  // Save summary
   await supabaseAdmin.from('summaries').insert({
     project_id: projectId,
     content: summaryContent,
@@ -82,7 +118,7 @@ Return plain text only. No markdown headers. Start with the prose paragraph, the
     created_by: user.id,
   })
 
-  // Update ocean state for members who are on done tasks (only those members)
+  // Update ocean state — only for members on done tasks
   const memberTaskCounts: Record<string, number> = {}
   for (const task of doneTasks) {
     for (const uid of (task.members as string[])) {
@@ -114,7 +150,6 @@ Return plain text only. No markdown headers. Start with the prose paragraph, the
     })
   )
 
-  // Delete all done tasks
   await supabaseAdmin.from('tasks').delete().eq('project_id', projectId).eq('status', 'done')
 
   return NextResponse.json({ ok: true, taskCount: doneTasks.length })
