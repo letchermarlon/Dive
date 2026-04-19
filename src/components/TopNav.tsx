@@ -25,7 +25,7 @@ export default function TopNav() {
         >
           🌊
         </div>
-        <span className="font-bold text-base" style={{ color: '#bbe1fa', letterSpacing: '-0.3px' }}>TideSprint</span>
+        <span className="font-bold text-base" style={{ color: '#bbe1fa', letterSpacing: '-0.3px' }}>Dive</span>
       </Link>
       <div className="flex items-center gap-4">
         <Link href="/dashboard" className="text-sm transition-colors" style={{ color: 'rgba(187,225,250,0.5)' }}>

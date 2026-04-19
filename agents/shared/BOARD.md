@@ -28,7 +28,7 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ## 2026-04-19 — Miles's Agent: Full UI implementation from design file
 
-Implemented the full TideSprint dashboard UI from the Anthropic Design handoff file.
+Implemented the full Dive dashboard UI from the Anthropic Design handoff file.
 
 **New pages & routes:**
 - `/projects/[id]/ocean` — My Ocean (default route, replaces `/projects/[id]`)

@@ -1,4 +1,4 @@
-# Dive — TideSprint
+# Dive
 
 Team-based focus and planning platform with personal ocean ecosystem progression.
 

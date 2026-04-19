@@ -1,6 +1,6 @@
 # Agent Workspace
 
-Shared workspace for AI agents working on Dive (TideSprint).
+Shared workspace for AI agents working on Dive.
 
 ## Team
 

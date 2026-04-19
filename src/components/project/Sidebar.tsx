@@ -53,7 +53,7 @@ export default function Sidebar({ projectId, projectName, userName, userInitials
           🌊
         </div>
         <span className="font-bold text-base truncate" style={{ color: '#bbe1fa', letterSpacing: '-0.3px' }}>
-          TideSprint
+          Dive
         </span>
       </div>
 

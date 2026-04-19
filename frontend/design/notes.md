@@ -1,7 +1,7 @@
 # Frontend Design Notes
 
 ## Reference prototype
-`frontend/prototype/TideSprint.html` — open directly in browser, no server needed.
+`frontend/prototype/Dive.html` — open directly in browser, no server needed.
 
 ## Font
 Figtree (Google Fonts) — wired via `next/font/google` in `src/app/layout.tsx`.

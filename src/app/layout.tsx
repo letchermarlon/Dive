@@ -9,7 +9,7 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Dive — TideSprint",
+  title: "Dive",
   description: "Team-based focus and planning platform with personal ocean ecosystem progression.",
 };
 
