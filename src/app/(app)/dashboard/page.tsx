@@ -1,31 +1,31 @@
+import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import SeaFloor from '@/components/reef/SeaFloor'
 import Card from '@/components/ui/Card'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
 
-  const { data: memberships } = await supabase
+  const { data: memberships } = await supabaseAdmin
     .from('project_members')
     .select('project_id, role, projects(id, name, description, goal)')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   const projectIds = memberships?.map(m => m.project_id) ?? []
 
   const { data: seafloors } = projectIds.length > 0
-    ? await supabase
+    ? await supabaseAdmin
         .from('seafloor_state')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .in('project_id', projectIds)
     : { data: [] }
 
   const projects = memberships?.map(m => {
-    const project = m.projects as { id: string; name: string; description: string; goal: string }
+    const project = m.projects as unknown as { id: string; name: string; description: string; goal: string }
     const floor = seafloors?.find(s => s.project_id === project.id)
     return { ...project, role: m.role, floor }
   }) ?? []

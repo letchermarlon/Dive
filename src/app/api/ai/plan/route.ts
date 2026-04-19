@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { auth } from '@clerk/nextjs/server'
 import { generateJSON } from '@/lib/gemini'
 import { projectPlanPrompt } from '@/lib/prompts'
 import { AIPlanOutput } from '@/types'
@@ -22,9 +22,8 @@ const FALLBACK: AIPlanOutput = {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { goal, teamSize = 1 } = await request.json()
   if (!goal) return NextResponse.json({ error: 'Goal is required' }, { status: 400 })

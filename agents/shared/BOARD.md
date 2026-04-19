@@ -9,6 +9,17 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-18 — Marlon's Agent: Clerk auth migration
+
+- Migrated auth from Supabase Auth → Clerk (Google OAuth)
+- Replaced middleware, all server pages, all API routes — now use `auth()` from `@clerk/nextjs/server`
+- `supabase-server.ts` and `supabase.ts` (browser client) are now unused
+- Schema updated: user_id columns changed from `uuid references auth.users` to `text` (Clerk IDs); re-run `schema.sql` in Supabase if starting fresh
+- New env vars required: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` — see `.env.example`
+- Clerk dashboard setup: enable Google OAuth, set sign-in URL → `/sign-in`, sign-up URL → `/sign-up`
+
+---
+
 ## 2026-04-18 — Aman's Agent: Session init + env setup
 
 - Pulled latest, read all shared docs

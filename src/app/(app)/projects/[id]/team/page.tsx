@@ -1,22 +1,22 @@
-import { createClient } from '@/lib/supabase-server'
+import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import Card from '@/components/ui/Card'
 import SeaFloor from '@/components/reef/SeaFloor'
 
 export default async function TeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/sign-in')
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
 
-  const { data: project } = await supabase
+  const { data: project } = await supabaseAdmin
     .from('projects')
     .select('id, name')
     .eq('id', id)
     .single()
 
-  const { data: members } = await supabase
+  const { data: members } = await supabaseAdmin
     .from('project_members')
     .select('user_id, role, profiles(username, email)')
     .eq('project_id', id)
@@ -24,7 +24,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   const userIds = members?.map(m => m.user_id) ?? []
 
   const { data: stats } = userIds.length > 0
-    ? await supabase
+    ? await supabaseAdmin
         .from('team_stats')
         .select('*')
         .eq('project_id', id)
@@ -32,7 +32,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
     : { data: [] }
 
   const { data: floors } = userIds.length > 0
-    ? await supabase
+    ? await supabaseAdmin
         .from('seafloor_state')
         .select('*')
         .eq('project_id', id)
@@ -41,7 +41,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
 
   const ranked = (members ?? [])
     .map(m => {
-      const profile = m.profiles as { username: string; email: string }
+      const profile = m.profiles as unknown as { username: string; email: string }
       const stat = stats?.find(s => s.user_id === m.user_id)
       const floor = floors?.find(f => f.user_id === m.user_id)
       return {
@@ -52,7 +52,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         focusSessions: stat?.focus_sessions ?? 0,
         progressScore: floor?.progress_score ?? 0,
         healthScore: floor?.health_score ?? 100,
-        isCurrentUser: m.user_id === user.id,
+        isCurrentUser: m.user_id === userId,
       }
     })
     .sort((a, b) => b.completedTasks - a.completedTasks)
@@ -68,7 +68,6 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Rankings */}
       <Card title="🏆 Rankings">
         <div className="flex flex-col gap-3">
           {ranked.map((member, i) => (
@@ -96,7 +95,6 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         </div>
       </Card>
 
-      {/* Individual reefs */}
       <div>
         <h2 className="text-ocean-300 text-sm font-medium mb-3 uppercase tracking-wide">Individual reefs</h2>
         <div className="grid gap-4 md:grid-cols-2">
@@ -112,7 +110,6 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      {/* Share link */}
       <Card title="Invite teammates">
         <p className="text-ocean-400 text-sm mb-2">Share this project ID with your team so they can join:</p>
         <code className="block bg-ocean-800 rounded px-3 py-2 text-ocean-300 text-sm break-all">{id}</code>
