@@ -20,7 +20,7 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   ] = await Promise.all([
     supabaseAdmin
       .from('project_members')
-      .select('user_id, role, profiles(username, email)')
+      .select('user_id, role')
       .eq('project_id', id),
     supabaseAdmin
       .from('team_stats')
@@ -38,9 +38,15 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       .not('completed_at', 'is', null),
   ])
 
+  // Fetch profiles separately (no FK defined between project_members.user_id and profiles.id)
+  const userIds = (members ?? []).map(m => m.user_id as string)
+  const { data: profiles } = userIds.length > 0
+    ? await supabaseAdmin.from('profiles').select('id, username, email').in('id', userIds)
+    : { data: [] }
+
   // Enrich members with stats + ocean data
   const enriched = (members ?? []).map(m => {
-    const profile = m.profiles as unknown as { username: string; email: string }
+    const profile = (profiles ?? []).find(p => p.id === m.user_id)
     const stat = (stats ?? []).find(s => s.user_id === m.user_id)
     const floor = (seafloors ?? []).find(f => f.user_id === m.user_id)
     return {
