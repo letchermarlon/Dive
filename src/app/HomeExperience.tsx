@@ -10,7 +10,9 @@ import SignInForm from "./(auth)/sign-in/SignInForm";
 export default function HomeExperience() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [showAuth, setShowAuth] = useState(() => searchParams.get("auth") === "1");
+  const [showAuth, setShowAuth] = useState(
+    () => searchParams.get("auth") === "1",
+  );
 
   useEffect(() => {
     setShowAuth(searchParams.get("auth") === "1");
@@ -29,53 +31,83 @@ export default function HomeExperience() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <OceanBackground />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(164,255,245,0.16),transparent_30%),linear-gradient(180deg,rgba(4,12,19,0.18),rgba(4,12,19,0.7))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(164,255,245,0.12),transparent_24%),linear-gradient(180deg,rgba(4,12,19,0.14),rgba(4,12,19,0.78))]" />
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-16">
-        <div className="relative flex w-full max-w-5xl items-center justify-center">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12 sm:py-16">
+        <div className="relative flex w-full max-w-6xl items-center justify-center">
           <section
             className={cn(
-              "flex w-full max-w-2xl flex-col items-center text-center transition-all duration-700 ease-out",
+              "flex w-full max-w-4xl flex-col items-center text-center transition-all duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
               showAuth
-                ? "pointer-events-none -translate-y-10 scale-95 opacity-0 blur-sm"
-                : "translate-y-0 scale-100 opacity-100 blur-0",
+                ? "pointer-events-none -translate-y-[105vh] opacity-0"
+                : "translate-y-0 opacity-100",
             )}
             aria-hidden={showAuth}
           >
-            <div className="mb-6 inline-flex items-center rounded-full border border-cyan-200/20 bg-black/20 px-4 py-2 text-xs uppercase tracking-[0.35em] text-cyan-100/70 backdrop-blur-md">
-              Team focus in one tide
-            </div>
-            <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl">
-              Dive gives your team one place to plan, focus, and keep momentum moving.
+            <h1 className="max-w-5xl text-6xl font-bold tracking-[-0.05em] text-white sm:text-7xl md:text-8xl lg:text-[7rem]">
+              Dive.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-cyan-50/75 sm:text-xl">
-              Turn shared work into a living ocean of progress, with fast planning, calmer reviews,
-              and a sign-in flow that starts exactly when people are ready.
+            <p className="mt-4 max-w-2xl text-xl leading-8 text-white/72 sm:text-2xl sm:leading-9">
+              Dive keeps planning, focus, and follow-through in one calm flow
+              for your team.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Button
                 type="button"
                 size="lg"
                 onClick={openAuth}
-                className="pointer-events-auto rounded-2xl bg-cyan-300 px-8 text-black shadow-[0_20px_60px_rgba(77,243,255,0.25)] hover:bg-cyan-200"
+                className="pointer-events-auto h-14 rounded-2xl bg-white px-9 text-lg font-semibold text-black shadow-[0_20px_60px_rgba(77,243,255,0.18)] hover:bg-white/90"
               >
                 Get started
               </Button>
+            </div>
+            <div className="mt-12 grid w-full max-w-5xl gap-5 md:grid-cols-3">
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 text-left backdrop-blur-md">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-100/65">
+                  Plan
+                </p>
+                <p className="mt-4 text-2xl font-semibold text-white">
+                  Move from idea to next step.
+                </p>
+                <p className="mt-3 text-base leading-7 text-white/65">
+                  Keep priorities visible without turning your workflow into
+                  noise.
+                </p>
+              </div>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 text-left backdrop-blur-md">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-100/65">
+                  Focus
+                </p>
+                <p className="mt-4 text-2xl font-semibold text-white">
+                  Stay aligned without chasing updates.
+                </p>
+                <p className="mt-3 text-base leading-7 text-white/65">
+                  Give everyone one shared view of what matters right now.
+                </p>
+              </div>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-6 text-left backdrop-blur-md">
+                <p className="text-sm font-semibold uppercase tracking-[0.26em] text-cyan-100/65">
+                  Flow
+                </p>
+                <p className="mt-4 text-2xl font-semibold text-white">
+                  Let progress feel steady.
+                </p>
+                <p className="mt-3 text-base leading-7 text-white/65">
+                  Replace scattered status checking with calm forward motion.
+                </p>
+              </div>
             </div>
           </section>
 
           <div
             className={cn(
-              "absolute inset-x-0 mx-auto w-full max-w-md transition-all duration-700 ease-out",
+              "absolute inset-x-0 mx-auto w-full max-w-md transition-all duration-[1600ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
               showAuth
                 ? "translate-y-0 opacity-100"
-                : "pointer-events-none translate-y-10 opacity-0",
+                : "pointer-events-none translate-y-[105vh] opacity-0",
             )}
           >
-            <SignInForm
-              className="max-w-md"
-              onBack={closeAuth}
-            />
+            <SignInForm className="max-w-md" onBack={closeAuth} />
           </div>
         </div>
       </div>
