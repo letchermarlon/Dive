@@ -14,26 +14,17 @@ export default function TopNav() {
   }
 
   return (
-    <nav
-      className="flex items-center justify-between px-6 py-3 border-b border-white/10 backdrop-blur-md bg-black/20"
-    >
-      <Link href="/dashboard" className="flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-          style={{ background: 'linear-gradient(135deg, #3282b8, #bbe1fa)' }}
-        >
-          🌊
-        </div>
-        <span className="font-bold text-base" style={{ color: '#bbe1fa', letterSpacing: '-0.3px' }}>Dive</span>
-      </Link>
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard" className="text-sm transition-colors" style={{ color: 'rgba(187,225,250,0.5)' }}>
-          Dashboard
+    <nav className="px-6 py-4">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm bg-gradient-to-br from-[#3282b8] to-[#bbe1fa]">
+            🌊
+          </div>
+          <span className="font-bold text-base tracking-tight text-white">Dive</span>
         </Link>
         <button
           onClick={handleSignOut}
-          className="text-sm transition-colors"
-          style={{ color: 'rgba(187,225,250,0.5)' }}
+          className="text-sm font-medium text-white/60 hover:text-white/90 transition-colors"
         >
           Sign out
         </button>
