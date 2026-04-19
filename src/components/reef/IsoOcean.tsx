@@ -101,20 +101,26 @@ function DecoCoral({ x, y, col, row }: { x: number; y: number; col: number; row:
 
 // ─── Fish ─────────────────────────────────────────────────────────────────
 interface FishCfg { yPos: number; dur: number; delay: number; rtl: boolean; small: boolean }
+
+// yPos values are in local (island-centered) coordinate space.
+// Converted from previous SVG screen coords by subtracting SVG_H/2 (147.5).
 const FISH_POOL: FishCfg[] = [
-  { yPos: 180, dur: 15, delay: 3,  rtl: false, small: false },
-  { yPos: 205, dur: 11, delay: 8,  rtl: true,  small: true  },
-  { yPos: 155, dur: 17, delay: 1,  rtl: false, small: true  },
-  { yPos: 225, dur: 13, delay: 5,  rtl: true,  small: false },
-  { yPos: 140, dur: 19, delay: 11, rtl: false, small: false },
-  { yPos: 245, dur: 12, delay: 7,  rtl: true,  small: true  },
-  { yPos: 170, dur: 16, delay: 2,  rtl: false, small: true  },
-  { yPos: 215, dur: 14, delay: 9,  rtl: true,  small: false },
-  { yPos: 130, dur: 18, delay: 4,  rtl: false, small: false },
-  { yPos: 255, dur: 10, delay: 6,  rtl: true,  small: true  },
-  { yPos: 192, dur: 20, delay: 12, rtl: false, small: false },
-  { yPos: 165, dur: 11, delay: 3,  rtl: true,  small: true  },
+  { yPos:  33, dur: 15, delay:  3, rtl: false, small: false },
+  { yPos:  58, dur: 11, delay:  8, rtl: true,  small: true  },
+  { yPos:   8, dur: 17, delay:  1, rtl: false, small: true  },
+  { yPos:  78, dur: 13, delay:  5, rtl: true,  small: false },
+  { yPos:  -8, dur: 19, delay: 11, rtl: false, small: false },
+  { yPos:  98, dur: 12, delay:  7, rtl: true,  small: true  },
+  { yPos:  23, dur: 16, delay:  2, rtl: false, small: true  },
+  { yPos:  68, dur: 14, delay:  9, rtl: true,  small: false },
+  { yPos: -18, dur: 18, delay:  4, rtl: false, small: false },
+  { yPos: 108, dur: 10, delay:  6, rtl: true,  small: true  },
+  { yPos:  45, dur: 20, delay: 12, rtl: false, small: false },
+  { yPos:  18, dur: 11, delay:  3, rtl: true,  small: true  },
 ]
+
+// Swim range in local (zoom-group) coordinate space — wide enough to exit screen at min zoom
+const FISH_RANGE = 600
 
 function IsoFish({ yPos, dur, delay, rtl, small }: FishCfg) {
   const sc = small ? 0.72 : 1
@@ -123,8 +129,8 @@ function IsoFish({ yPos, dur, delay, rtl, small }: FishCfg) {
   return (
     <g>
       <animateTransform attributeName="transform" type="translate"
-        from={rtl ? `${SVG_W + 60} 0` : '-60 0'}
-        to={rtl ? '-60 0' : `${SVG_W + 60} 0`}
+        from={rtl ? `${FISH_RANGE} 0` : `${-FISH_RANGE} 0`}
+        to={rtl ? `${-FISH_RANGE} 0` : `${FISH_RANGE} 0`}
         dur={`${dur}s`} begin={`-${delay}s`} repeatCount="indefinite" />
       <g transform={`scale(${rtl ? -sc : sc}, ${sc})`}>
         <ellipse cx={0} cy={yPos} rx={13} ry={6.5} fill={fill} opacity={0.9} />
@@ -347,12 +353,14 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
               </g>
             )
           })}
-        </g>
 
-        {/* ── Fish — always in viewport space (outside zoom group) ── */}
-        {FISH_POOL.slice(0, fishCount).map((cfg, i) => (
-          <IsoFish key={i} {...cfg} />
-        ))}
+          {/* Fish — same plane as island, fade in/out via opacity */}
+          {FISH_POOL.map((cfg, i) => (
+            <g key={i} style={{ opacity: i < fishCount ? 1 : 0, transition: 'opacity 1.2s ease' }}>
+              <IsoFish {...cfg} />
+            </g>
+          ))}
+        </g>
       </svg>
 
       {/* HUD */}
