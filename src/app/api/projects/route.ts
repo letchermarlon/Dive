@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { AIPlanOutput } from '@/types'
 
 export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data } = await supabaseAdmin
     .from('project_members')
     .select('project_id, projects(id, name, description)')
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
 
   return NextResponse.json({ projects: data })
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
 
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
 
   const { data: project, error } = await supabaseAdmin
     .from('projects')
-    .insert({ name, goal, description: plan.projectSummary, created_by: userId })
+    .insert({ name, goal, description: plan.projectSummary, created_by: user.id })
     .select('id')
     .single()
 
@@ -60,9 +62,9 @@ export async function POST(request: NextRequest) {
   const projectId = project.id
 
   await Promise.all([
-    supabaseAdmin.from('project_members').insert({ project_id: projectId, user_id: userId, role: 'owner' }),
-    supabaseAdmin.from('seafloor_state').insert({ user_id: userId, project_id: projectId }),
-    supabaseAdmin.from('team_stats').insert({ user_id: userId, project_id: projectId }),
+    supabaseAdmin.from('project_members').insert({ project_id: projectId, user_id: user.id, role: 'owner' }),
+    supabaseAdmin.from('seafloor_state').insert({ user_id: user.id, project_id: projectId }),
+    supabaseAdmin.from('team_stats').insert({ user_id: user.id, project_id: projectId }),
   ])
 
   const { data: sprint } = await supabaseAdmin

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { status } = await request.json()
 
@@ -18,7 +19,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: stat } = await supabaseAdmin
       .from('team_stats')
       .select('completed_tasks')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('project_id', task.project_id)
       .single()
 
@@ -26,12 +27,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     await supabaseAdmin
       .from('team_stats')
-      .upsert({ user_id: userId, project_id: task.project_id, completed_tasks: newCount })
+      .upsert({ user_id: user.id, project_id: task.project_id, completed_tasks: newCount })
 
     await supabaseAdmin
       .from('seafloor_state')
       .upsert({
-        user_id: userId,
+        user_id: user.id,
         project_id: task.project_id,
         progress_score: newCount,
         last_activity_at: new Date().toISOString(),

@@ -1,11 +1,12 @@
-import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import OceanBackground from '@/components/OceanBackground'
 
 export default async function RootPage() {
-  const { userId } = await auth()
-  if (userId) redirect('/dashboard')
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) redirect('/dashboard')
 
   return (
     <div className="relative min-h-screen overflow-hidden">

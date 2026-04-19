@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { generateJSON } from '@/lib/gemini'
 import { sprintReviewPrompt } from '@/lib/prompts'
@@ -17,8 +17,9 @@ const FALLBACK: AIReviewOutput = {
 }
 
 export async function POST(request: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const supabase = await createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { sprintId, projectId, completed, blocked, improvement } = await request.json()
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
   await supabaseAdmin.from('sprint_reviews').insert({
     sprint_id: sprintId,
-    user_id: userId,
+    user_id: user.id,
     completed_summary: completed,
     blocked_summary: blocked,
     next_improvement: improvement,

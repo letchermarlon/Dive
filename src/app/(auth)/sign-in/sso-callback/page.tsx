@@ -1,5 +1,6 @@
-import { AuthenticateWithRedirectCallback } from '@clerk/nextjs'
+import { redirect } from 'next/navigation'
 
+// OAuth callback is now handled by /auth/callback/route.ts
 export default function SSOCallbackPage() {
-  return <AuthenticateWithRedirectCallback />
+  redirect('/dashboard')
 }
