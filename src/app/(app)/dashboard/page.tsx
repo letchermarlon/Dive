@@ -72,9 +72,9 @@ export default async function DashboardPage() {
                   <CardHeader className="flex-row items-start justify-between mb-0">
                     <div>
                       <CardTitle className="text-base text-white">{project.name}</CardTitle>
-                      {project.description && (
-                        <p className="text-sm mt-0.5 line-clamp-2 text-white/50">{project.description}</p>
-                      )}
+                      <p className="text-sm mt-0.5 line-clamp-2 text-white/50 min-h-[1.25rem]">
+                        {project.description}
+                      </p>
                     </div>
                     {project.role === 'owner' && <Badge>Owner</Badge>}
                   </CardHeader>

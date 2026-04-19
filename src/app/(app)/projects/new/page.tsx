@@ -53,7 +53,6 @@ export default function NewProjectPage() {
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="text-4xl mb-3">🌊</div>
               <p style={{ color: 'rgba(187,225,250,0.7)' }}>Creating your project...</p>
             </div>
           </div>
@@ -97,7 +96,7 @@ export default function NewProjectPage() {
                   className="py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                   style={{ background: '#3282b8', color: 'white' }}
                 >
-                  🤿 Create project
+                  Create project
                 </button>
               </form>
             </div>
