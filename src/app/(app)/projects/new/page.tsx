@@ -43,7 +43,7 @@ export default function NewProjectPage() {
     const data = await res.json()
     if (data.error) { setError(data.error); setLoading(false); return }
 
-    router.push(`/projects/${data.projectId}/sprint`)
+    router.push(`/projects/${data.projectId}/ocean`)
   }
 
   return (
