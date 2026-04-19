@@ -12,9 +12,9 @@ export type GazeResult = {
 };
 
 // Thresholds — tune these after testing
-const YAW_THRESHOLD = 25;    // degrees left/right before "looking-away"
-const PITCH_UP_THRESHOLD = -18;   // degrees (negative = looking up)
-const PITCH_DOWN_THRESHOLD = 22;  // degrees (positive = looking down)
+const YAW_THRESHOLD = 15;    // degrees left/right before "looking-away"
+const PITCH_UP_THRESHOLD = 0;    // degrees (negative = looking up)
+const PITCH_DOWN_THRESHOLD = 8;   // degrees (positive = looking down)
 
 // MediaPipe landmark indices (out of 478 total)
 const NOSE_TIP = 1;
