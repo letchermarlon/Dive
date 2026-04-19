@@ -11,10 +11,9 @@ export default async function OceanPage({ params }: { params: Promise<{ id: stri
 
   const userId = user.id
 
-  const [{ data: tasksRaw }, { data: floor }, { data: stats }] = await Promise.all([
+  const [{ data: tasksRaw }, { data: floor }] = await Promise.all([
     supabaseAdmin.from('tasks').select('*').eq('project_id', id).in('status', ['todo', 'doing', 'done']),
     supabaseAdmin.from('seafloor_state').select('*').eq('project_id', id).eq('user_id', userId).single(),
-    supabaseAdmin.from('team_stats').select('*').eq('project_id', id).eq('user_id', userId).single(),
   ])
 
   const tasks = (tasksRaw ?? []).map(t => ({
@@ -27,7 +26,6 @@ export default async function OceanPage({ params }: { params: Promise<{ id: stri
   }))
 
   const myTasks = tasks.filter(t => t.members?.includes(userId))
-  const totalTasks = tasks.length
   const doneTasks = tasks.filter(t => t.status === 'done').length
 
   return (
@@ -37,9 +35,7 @@ export default async function OceanPage({ params }: { params: Promise<{ id: stri
       progressScore={floor?.progress_score ?? 0}
       healthScore={floor?.health_score ?? 100}
       streakDays={floor?.streak_days ?? 0}
-      totalTasks={totalTasks}
       doneTasks={doneTasks}
-      focusSessions={stats?.focus_sessions ?? 0}
     />
   )
 }
