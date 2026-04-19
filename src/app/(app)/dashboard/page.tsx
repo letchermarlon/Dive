@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import SeaFloor from '@/components/reef/SeaFloor'
 import TopNav from '@/components/TopNav'
+import { DeleteProjectButton } from '@/components/DeleteProjectButton'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
@@ -107,6 +108,9 @@ export default async function DashboardPage() {
                     Sprint Board
                   </Link>
                 </div>
+                {project.role === 'owner' && (
+                  <DeleteProjectButton projectId={project.id} />
+                )}
               </div>
             ))}
           </div>
