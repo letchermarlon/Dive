@@ -6,6 +6,8 @@ import SeaFloor from '@/components/reef/SeaFloor'
 import TopNav from '@/components/TopNav'
 import { DeleteProjectButton } from '@/components/DeleteProjectButton'
 import OceanBackground from '@/components/OceanBackground'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
@@ -51,7 +53,7 @@ export default async function DashboardPage() {
             </div>
 
             {projects.length === 0 && (
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/6 p-12 text-center backdrop-blur-md">
+              <div className="rounded-[1.75rem] p-12 text-center" style={{ background: '#0d1f2e' }}>
                 <div className="text-5xl mb-4">🌊</div>
                 <p className="font-semibold text-white">Your ocean is empty</p>
                 <p className="text-sm mt-1 text-white/50">Create your first project to start growing your reef.</p>
@@ -66,45 +68,43 @@ export default async function DashboardPage() {
 
             <div className="grid gap-6 md:grid-cols-2">
               {projects.map(project => (
-                <div
-                  key={project.id}
-                  className="rounded-[1.75rem] border border-white/10 bg-white/6 p-4 backdrop-blur-md flex flex-col gap-4"
-                >
-                  <div className="flex items-start justify-between">
+                <Card key={project.id} className="flex flex-col gap-4 rounded-[1.75rem] border-0" style={{ background: '#0d1f2e' }}>
+                  <CardHeader className="flex-row items-start justify-between mb-0">
                     <div>
-                      <h2 className="font-semibold text-white">{project.name}</h2>
+                      <CardTitle className="text-base text-white">{project.name}</CardTitle>
                       {project.description && (
                         <p className="text-sm mt-0.5 line-clamp-2 text-white/50">{project.description}</p>
                       )}
                     </div>
-                    {project.role === 'owner' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-cyan-100/65">
-                        Owner
-                      </span>
-                    )}
-                  </div>
-                  <SeaFloor
-                    progressScore={project.floor?.progress_score ?? 0}
-                    healthScore={project.floor?.health_score ?? 100}
-                  />
-                  <div className="flex gap-2">
+                    {project.role === 'owner' && <Badge>Owner</Badge>}
+                  </CardHeader>
+                  <CardContent>
+                    <SeaFloor
+                      progressScore={project.floor?.progress_score ?? 0}
+                      healthScore={project.floor?.health_score ?? 100}
+                    />
+                  </CardContent>
+                  <CardContent className="flex gap-2">
                     <Link
                       href={`/projects/${project.id}/ocean`}
-                      className="flex-1 text-center py-2 rounded-xl text-sm font-semibold text-black bg-white hover:bg-white/90 transition-colors"
+                      className="flex-1 text-center py-2 rounded-lg text-sm font-semibold transition-colors"
+                      style={{ background: 'white', color: '#0d1f2e' }}
                     >
                       My Ocean
                     </Link>
                     <Link
                       href={`/projects/${project.id}/sprint`}
-                      className="flex-1 text-center py-2 rounded-xl text-sm font-semibold text-white/80 border border-white/10 bg-white/6 backdrop-blur-md hover:bg-white/10 transition-colors"
+                      className="flex-1 text-center py-2 rounded-lg text-sm font-semibold border border-white/15 transition-colors text-white/70 hover:bg-white/8"
                     >
                       Board
                     </Link>
-                  </div>
+                  </CardContent>
                   {project.role === 'owner' && (
-                    <DeleteProjectButton projectId={project.id} />
+                    <CardContent>
+                      <DeleteProjectButton projectId={project.id} />
+                    </CardContent>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           </div>

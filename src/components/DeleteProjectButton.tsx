@@ -20,7 +20,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="flex-1 py-2 rounded-lg text-sm font-medium"
+          className="flex-1 py-2 rounded-lg text-sm font-medium w-full"
           style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171' }}
         >
           {loading ? "Deleting..." : "Confirm delete"}
@@ -39,7 +39,7 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="flex-1 text-center py-2 rounded-lg text-sm font-medium transition-colors"
+      className="w-full text-center py-2 rounded-lg text-sm font-medium transition-colors"
       style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}
     >
       Delete
