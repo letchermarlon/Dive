@@ -1,29 +1,24 @@
-import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import SeaFloor from '@/components/reef/SeaFloor'
-import Card from '@/components/ui/Card'
+import TopNav from '@/components/TopNav'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
-  const userId = user.id
 
   const { data: memberships } = await supabaseAdmin
     .from('project_members')
     .select('project_id, role, projects(id, name, description, goal)')
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
 
   const projectIds = memberships?.map(m => m.project_id) ?? []
 
   const { data: seafloors } = projectIds.length > 0
-    ? await supabaseAdmin
-        .from('seafloor_state')
-        .select('*')
-        .eq('user_id', userId)
-        .in('project_id', projectIds)
+    ? await supabaseAdmin.from('seafloor_state').select('*').eq('user_id', user.id).in('project_id', projectIds)
     : { data: [] }
 
   const projects = memberships?.map(m => {
@@ -33,71 +28,90 @@ export default async function DashboardPage() {
   }) ?? []
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-ocean-100">Your Ocean</h1>
-          <p className="text-ocean-400 text-sm mt-1">Each project has its own reef. Keep diving.</p>
-        </div>
-        <Link
-          href="/projects/new"
-          className="px-4 py-2 bg-ocean-500 hover:bg-ocean-400 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          + New project
-        </Link>
-      </div>
+    <div className="min-h-screen flex flex-col" style={{ background: '#0d1f26' }}>
+      <TopNav />
+      <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold" style={{ color: '#bbe1fa' }}>Your Ocean</h1>
+              <p className="text-sm mt-1" style={{ color: 'rgba(187,225,250,0.5)' }}>Each project has its own reef. Keep diving.</p>
+            </div>
+            <Link
+              href="/projects/new"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{ background: '#3282b8', color: 'white' }}
+            >
+              + New project
+            </Link>
+          </div>
 
-      {projects.length === 0 && (
-        <Card className="text-center py-12">
-          <div className="text-5xl mb-4">🌊</div>
-          <p className="text-ocean-300 font-medium">Your ocean is empty</p>
-          <p className="text-ocean-500 text-sm mt-1">Create your first project to start growing your reef.</p>
-          <Link
-            href="/projects/new"
-            className="inline-block mt-4 px-4 py-2 bg-ocean-500 hover:bg-ocean-400 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            Create project
-          </Link>
-        </Card>
-      )}
+          {projects.length === 0 && (
+            <div
+              className="rounded-xl p-12 text-center"
+              style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
+            >
+              <div className="text-5xl mb-4">🌊</div>
+              <p className="font-medium" style={{ color: '#bbe1fa' }}>Your ocean is empty</p>
+              <p className="text-sm mt-1" style={{ color: 'rgba(187,225,250,0.5)' }}>Create your first project to start growing your reef.</p>
+              <Link
+                href="/projects/new"
+                className="inline-block mt-4 px-4 py-2 rounded-lg text-sm font-medium"
+                style={{ background: '#3282b8', color: 'white' }}
+              >
+                Create project
+              </Link>
+            </div>
+          )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {projects.map(project => (
-          <Card key={project.id} className="flex flex-col gap-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-ocean-100 font-semibold">{project.name}</h2>
-                {project.description && (
-                  <p className="text-ocean-400 text-sm mt-0.5 line-clamp-2">{project.description}</p>
-                )}
+          <div className="grid gap-6 md:grid-cols-2">
+            {projects.map(project => (
+              <div
+                key={project.id}
+                className="rounded-xl p-4 flex flex-col gap-4"
+                style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-semibold" style={{ color: '#bbe1fa' }}>{project.name}</h2>
+                    {project.description && (
+                      <p className="text-sm mt-0.5 line-clamp-2" style={{ color: 'rgba(187,225,250,0.5)' }}>{project.description}</p>
+                    )}
+                  </div>
+                  {project.role === 'owner' && (
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(50,130,184,0.25)', color: '#bbe1fa' }}
+                    >
+                      Owner
+                    </span>
+                  )}
+                </div>
+                <SeaFloor
+                  progressScore={project.floor?.progress_score ?? 0}
+                  healthScore={project.floor?.health_score ?? 100}
+                />
+                <div className="flex gap-2">
+                  <Link
+                    href={`/projects/${project.id}/ocean`}
+                    className="flex-1 text-center py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{ background: '#3282b8', color: 'white' }}
+                  >
+                    My Ocean
+                  </Link>
+                  <Link
+                    href={`/projects/${project.id}/sprint`}
+                    className="flex-1 text-center py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)', color: '#bbe1fa' }}
+                  >
+                    Sprint Board
+                  </Link>
+                </div>
               </div>
-              {project.role === 'owner' && (
-                <span className="text-xs bg-ocean-700 text-ocean-300 px-2 py-0.5 rounded-full">Owner</span>
-              )}
-            </div>
-
-            <SeaFloor
-              progressScore={project.floor?.progress_score ?? 0}
-              healthScore={project.floor?.health_score ?? 100}
-            />
-
-            <div className="flex gap-2">
-              <Link
-                href={`/projects/${project.id}`}
-                className="flex-1 text-center py-2 bg-ocean-700 hover:bg-ocean-600 text-ocean-200 rounded-lg text-sm font-medium transition-colors"
-              >
-                Sprint board
-              </Link>
-              <Link
-                href={`/projects/${project.id}/team`}
-                className="flex-1 text-center py-2 bg-ocean-800 hover:bg-ocean-700 text-ocean-300 rounded-lg text-sm font-medium transition-colors"
-              >
-                Team
-              </Link>
-            </div>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

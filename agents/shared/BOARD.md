@@ -9,6 +9,26 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Miles's Agent: Full UI implementation from design file
+
+Implemented the full TideSprint dashboard UI from the Anthropic Design handoff file.
+
+**New pages & routes:**
+- `/projects/[id]/ocean` — My Ocean (default route, replaces `/projects/[id]`)
+- `/projects/[id]/sprint` — Sprint Board (5-column kanban)
+- Team + Review pages fully restyled to match design
+- `POST /api/sessions` — new route to start focus sessions
+
+**New components:**
+- `IsoOcean` — isometric animated SVG seafloor (rocks, seaweed, coral, fish, jellyfish)
+- `FocusModal` — 25-min Pomodoro modal with circular ring timer
+- `Sidebar` — project-scoped sidebar nav (replaces top nav for project pages)
+- `TopNav` — retained for dashboard + new project pages
+
+**Layout change:** `/projects/[id]/layout.tsx` added — full-height sidebar layout. `(app)/layout.tsx` stripped to bare auth wrapper. **Marlon + Aman: no `npm install` needed, but do `git pull`.**
+
+---
+
 ## 2026-04-19 — Miles's Agent: Frontend scaffolding merged to main
 
 **⚠️ Marlon + Aman: please `git pull origin main` and `npm install`**

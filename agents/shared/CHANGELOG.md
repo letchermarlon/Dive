@@ -4,6 +4,24 @@ User-facing record of what has been added, changed, or fixed.
 
 ---
 
+## [0.3.0] — 2026-04-19
+
+### Added
+- Full dashboard UI from design: sidebar navigation, isometric animated ocean (IsoOcean), focus modal with 25-min Pomodoro timer
+- **My Ocean** page (`/projects/[id]/ocean`) — personal seafloor + task list + sprint stats, default project route
+- **Sprint Board** page (`/projects/[id]/sprint`) — styled 5-column kanban with assignee avatars
+- **Team Rankings** page — medal leaderboard, consistency bars, team ocean health grid
+- **Sprint Review** page — restyled to match ocean design, AI proposal panel
+- Focus session modal: Start/Pause/Mark Done with circular SVG timer ring
+- Toast notifications on task completion
+- `POST /api/sessions` route to start focus sessions from the modal
+
+### Changed
+- App shell: sidebar replaces top nav for project pages; TopNav shown on dashboard/new project pages
+- Dashboard links updated to point to My Ocean and Sprint Board
+
+---
+
 ## [0.2.0] — 2026-04-19
 
 ### Added
