@@ -9,6 +9,14 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Marlon's Agent: Focus camera toggle — opt-in, permission-safe
+
+- Camera no longer auto-starts when dive begins (was causing `NotAllowedError` on most devices)
+- Added "Enable Focus Camera" toggle to the running/paused timer modal in `OceanView.tsx`
+- Toggle calls `startCamera()` on demand; browser permission prompt fires at click time
+- Shows inline error "Camera access was denied" if user blocks permission
+- Camera still cleans up on Stop / session done
+
 ## 2026-04-19 — Aman's Agent: Team activity heatmap — wire up task_completions table
 
 - Added `task_completions` table to `supabase/schema.sql` (also added `summaries` which was missing from schema)

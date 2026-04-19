@@ -4,6 +4,11 @@ User-facing record of what has been added, changed, or fixed.
 
 ---
 
+## [0.6.1] — 2026-04-19
+
+### Fixed
+- **Focus Camera**: camera is now opt-in via a toggle in the dive timer — no more auto-start permission errors; shows a clear error if camera access is denied
+
 ## [0.6.0] — 2026-04-19
 
 ### Changed

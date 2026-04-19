@@ -59,8 +59,9 @@ export default function OceanView({
   const [toast, setToast] = useState<string | null>(null)
 
   // Camera monitoring
-  const { status: focusStatus, videoRef, startCamera, stopCamera } = useFocusMonitor()
+  const { status: focusStatus, videoRef, startCamera, stopCamera, cameraStatus } = useFocusMonitor()
   const isDistracted = focusStatus === 'looking-away' || focusStatus === 'phone-detected' || focusStatus === 'no-face'
+  const cameraOn = cameraStatus === 'active' || cameraStatus === 'requesting'
 
   // Dive timer
   const [showDive, setShowDive] = useState(false)
@@ -109,7 +110,6 @@ export default function OceanView({
     setDiveTotal(seconds)
     setDiveRemaining(seconds)
     setDivePhase('running')
-    startCamera()
   }
 
   function handleCustomStart() {
@@ -393,6 +393,65 @@ export default function OceanView({
                     Start
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Camera toggle row */}
+            {(divePhase === 'running' || divePhase === 'paused') && (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 18px',
+                    borderRadius: 12,
+                    background: 'rgba(0,0,0,0.25)',
+                    border: '1px solid rgba(187,225,250,0.1)',
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: 'rgba(187,225,250,0.7)', fontWeight: 500 }}>
+                    📷 Enable Focus Camera
+                  </span>
+                  <button
+                    onClick={() => cameraOn ? stopCamera() : startCamera()}
+                    style={{
+                      width: 48,
+                      height: 26,
+                      borderRadius: 13,
+                      border: 'none',
+                      cursor: cameraStatus === 'requesting' ? 'wait' : 'pointer',
+                      background: cameraOn ? '#3282b8' : 'rgba(187,225,250,0.15)',
+                      position: 'relative',
+                      transition: 'background 0.2s',
+                      flexShrink: 0,
+                    }}
+                    disabled={cameraStatus === 'requesting'}
+                  >
+                    <span style={{
+                      position: 'absolute',
+                      top: 3,
+                      left: cameraOn ? 25 : 3,
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: 'white',
+                      transition: 'left 0.2s',
+                    }} />
+                  </button>
+                </div>
+                {cameraStatus === 'denied' && (
+                  <div style={{
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    background: 'rgba(220,60,60,0.12)',
+                    border: '1px solid rgba(220,60,60,0.35)',
+                    fontSize: 13,
+                    color: 'rgba(255,130,130,0.9)',
+                  }}>
+                    Camera access was denied. Allow camera access in your browser settings and try again.
+                  </div>
+                )}
               </div>
             )}
 
