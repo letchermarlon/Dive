@@ -230,9 +230,11 @@ export default function SeaFloor({ progressScore, healthScore }: SeaFloorProps) 
       {/* Light shafts */}
       {isHealthy && (
         <>
-          <div className="absolute top-0 pointer-events-none" style={{ left: '18%', width: 40, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.045) 0%, transparent 80%)', transform: 'rotate(6deg)',  transformOrigin: 'top center' }} />
-          <div className="absolute top-0 pointer-events-none" style={{ left: '50%', width: 30, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.035) 0%, transparent 70%)', transform: 'rotate(-4deg)', transformOrigin: 'top center' }} />
-          <div className="absolute top-0 pointer-events-none" style={{ left: '74%', width: 36, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.040) 0%, transparent 75%)', transform: 'rotate(8deg)',  transformOrigin: 'top center' }} />
+          <div className="absolute top-0 pointer-events-none" style={{ left: '12%', width: 36, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.07) 0%, transparent 80%)', transform: 'rotate(5deg)',  transformOrigin: 'top center', animation: 'sf-ray 7s ease-in-out infinite' }} />
+          <div className="absolute top-0 pointer-events-none" style={{ left: '34%', width: 24, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.05) 0%, transparent 70%)', transform: 'rotate(-3deg)', transformOrigin: 'top center', animation: 'sf-ray 9s ease-in-out 2s infinite' }} />
+          <div className="absolute top-0 pointer-events-none" style={{ left: '55%', width: 44, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.06) 0%, transparent 75%)', transform: 'rotate(7deg)',  transformOrigin: 'top center', animation: 'sf-ray 11s ease-in-out 4.5s infinite' }} />
+          <div className="absolute top-0 pointer-events-none" style={{ left: '72%', width: 28, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.05) 0%, transparent 65%)', transform: 'rotate(-6deg)', transformOrigin: 'top center', animation: 'sf-ray 8s ease-in-out 1.5s infinite' }} />
+          <div className="absolute top-0 pointer-events-none" style={{ left: '86%', width: 32, height: '100%', background: 'linear-gradient(180deg, rgba(187,225,250,0.06) 0%, transparent 72%)', transform: 'rotate(4deg)',  transformOrigin: 'top center', animation: 'sf-ray 13s ease-in-out 6s infinite' }} />
         </>
       )}
 
@@ -351,6 +353,10 @@ export default function SeaFloor({ progressScore, healthScore }: SeaFloorProps) 
       </div>
 
       <style>{`
+        @keyframes sf-ray {
+          0%, 100% { opacity: 0;   }
+          50%      { opacity: 1;   }
+        }
         @keyframes sf-rise {
           0%   { transform: translateY(0);      opacity: 0.7; }
           100% { transform: translateY(-180px); opacity: 0;   }
