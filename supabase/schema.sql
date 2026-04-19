@@ -1,8 +1,10 @@
 -- Run this in your Supabase SQL editor (Database > SQL Editor > New query)
+-- Auth is handled by Clerk. User IDs are Clerk user IDs (text, e.g. "user_2Nf9S...").
+-- All DB operations use the service role key; RLS policies deny anon access by default.
 
--- Profiles (synced from auth.users)
+-- Profiles (synced from Clerk on first app load)
 create table profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
+  id text primary key,
   username text,
   email text not null,
   created_at timestamptz default now()
@@ -14,7 +16,7 @@ create table projects (
   name text not null,
   description text,
   goal text,
-  created_by uuid references auth.users(id) on delete cascade,
+  created_by text,
   created_at timestamptz default now()
 );
 
@@ -22,7 +24,7 @@ create table projects (
 create table project_members (
   id uuid primary key default gen_random_uuid(),
   project_id uuid references projects(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete cascade,
+  user_id text not null,
   role text default 'member' check (role in ('owner', 'member')),
   joined_at timestamptz default now(),
   unique(project_id, user_id)
@@ -47,7 +49,7 @@ create table tasks (
   title text not null,
   description text,
   status text default 'backlog' check (status in ('backlog', 'todo', 'doing', 'done', 'blocked')),
-  assigned_to uuid references auth.users(id) on delete set null,
+  assigned_to text,
   estimated_minutes int,
   created_at timestamptz default now()
 );
@@ -55,7 +57,7 @@ create table tasks (
 -- Focus Sessions
 create table focus_sessions (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
+  user_id text not null,
   task_id uuid references tasks(id) on delete cascade,
   project_id uuid references projects(id) on delete cascade,
   duration_minutes int not null,
@@ -68,7 +70,7 @@ create table focus_sessions (
 create table sprint_reviews (
   id uuid primary key default gen_random_uuid(),
   sprint_id uuid references sprints(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete cascade,
+  user_id text not null,
   completed_summary text,
   blocked_summary text,
   next_improvement text,
@@ -80,7 +82,7 @@ create table sprint_reviews (
 -- Seafloor State (per user per project)
 create table seafloor_state (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
+  user_id text not null,
   project_id uuid references projects(id) on delete cascade,
   health_score int default 100,
   progress_score int default 0,
@@ -92,7 +94,7 @@ create table seafloor_state (
 -- Team Stats (per user per project)
 create table team_stats (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
+  user_id text not null,
   project_id uuid references projects(id) on delete cascade,
   completed_tasks int default 0,
   focus_sessions int default 0,
@@ -100,21 +102,7 @@ create table team_stats (
   unique(user_id, project_id)
 );
 
--- Auto-create profile on sign up
-create or replace function handle_new_user()
-returns trigger as $$
-begin
-  insert into profiles (id, email)
-  values (new.id, new.email);
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure handle_new_user();
-
--- Row Level Security
+-- Row Level Security (service role bypasses all; anon key is locked out)
 alter table profiles        enable row level security;
 alter table projects        enable row level security;
 alter table project_members enable row level security;
@@ -125,64 +113,13 @@ alter table sprint_reviews  enable row level security;
 alter table seafloor_state  enable row level security;
 alter table team_stats      enable row level security;
 
--- Profiles: users can read all, update their own
-create policy "profiles_read"   on profiles for select using (true);
-create policy "profiles_update" on profiles for update using (auth.uid() = id);
-
--- Projects: members can read, anyone authenticated can create
-create policy "projects_read"   on projects for select using (
-  exists (select 1 from project_members where project_id = projects.id and user_id = auth.uid())
-);
-create policy "projects_insert" on projects for insert with check (auth.uid() = created_by);
-create policy "projects_update" on projects for update using (auth.uid() = created_by);
-
--- Project Members: members can read, service role inserts
-create policy "members_read"   on project_members for select using (
-  exists (select 1 from project_members pm where pm.project_id = project_members.project_id and pm.user_id = auth.uid())
-);
-create policy "members_insert" on project_members for insert with check (auth.uid() = user_id);
-
--- Sprints: project members can read/update
-create policy "sprints_read"   on sprints for select using (
-  exists (select 1 from project_members where project_id = sprints.project_id and user_id = auth.uid())
-);
-create policy "sprints_insert" on sprints for insert with check (
-  exists (select 1 from project_members where project_id = sprints.project_id and user_id = auth.uid())
-);
-create policy "sprints_update" on sprints for update using (
-  exists (select 1 from project_members where project_id = sprints.project_id and user_id = auth.uid())
-);
-
--- Tasks: project members can read/update
-create policy "tasks_read"   on tasks for select using (
-  exists (select 1 from project_members where project_id = tasks.project_id and user_id = auth.uid())
-);
-create policy "tasks_insert" on tasks for insert with check (
-  exists (select 1 from project_members where project_id = tasks.project_id and user_id = auth.uid())
-);
-create policy "tasks_update" on tasks for update using (
-  exists (select 1 from project_members where project_id = tasks.project_id and user_id = auth.uid())
-);
-
--- Focus Sessions: own sessions only
-create policy "sessions_read"   on focus_sessions for select using (auth.uid() = user_id);
-create policy "sessions_insert" on focus_sessions for insert with check (auth.uid() = user_id);
-create policy "sessions_update" on focus_sessions for update using (auth.uid() = user_id);
-
--- Sprint Reviews: project members can read, users insert their own
-create policy "reviews_read"   on sprint_reviews for select using (
-  exists (select 1 from sprints s join project_members pm on pm.project_id = s.project_id where s.id = sprint_reviews.sprint_id and pm.user_id = auth.uid())
-);
-create policy "reviews_insert" on sprint_reviews for insert with check (auth.uid() = user_id);
-
--- Seafloor: own state only
-create policy "seafloor_read"   on seafloor_state for select using (auth.uid() = user_id);
-create policy "seafloor_insert" on seafloor_state for insert with check (auth.uid() = user_id);
-create policy "seafloor_update" on seafloor_state for update using (auth.uid() = user_id);
-
--- Team Stats: project members can read all, own insert/update
-create policy "stats_read"   on team_stats for select using (
-  exists (select 1 from project_members where project_id = team_stats.project_id and user_id = auth.uid())
-);
-create policy "stats_insert" on team_stats for insert with check (auth.uid() = user_id);
-create policy "stats_update" on team_stats for update using (auth.uid() = user_id);
+-- Deny all anon access (service role bypasses RLS and is used for all operations)
+create policy "deny_anon" on profiles        for all using (false);
+create policy "deny_anon" on projects        for all using (false);
+create policy "deny_anon" on project_members for all using (false);
+create policy "deny_anon" on sprints         for all using (false);
+create policy "deny_anon" on tasks           for all using (false);
+create policy "deny_anon" on focus_sessions  for all using (false);
+create policy "deny_anon" on sprint_reviews  for all using (false);
+create policy "deny_anon" on seafloor_state  for all using (false);
+create policy "deny_anon" on team_stats      for all using (false);
