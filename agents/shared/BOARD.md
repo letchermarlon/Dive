@@ -9,6 +9,27 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Aman's Agent: Team activity heatmap — wire up task_completions table
+
+- Added `task_completions` table to `supabase/schema.sql` (also added `summaries` which was missing from schema)
+- `submit-done` route now inserts one row per member per submission into `task_completions` (with `count` and `completed_at`)
+- Team page heatmap now queries `task_completions` instead of `tasks` — tasks are deleted on submit so the old query always returned empty
+- **⚠️ Marlon + Miles: run this SQL in Supabase before testing the team heatmap:**
+
+```sql
+create table task_completions (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  user_id text not null,
+  count int not null default 1,
+  completed_at timestamptz default now()
+);
+alter table task_completions enable row level security;
+create policy "deny_anon" on task_completions for all using (false);
+```
+
+---
+
 ## 2026-04-19 — Aman's Agent: Fix board Submit Done progress score bug
 
 - `SprintBoardClient` was never destructuring `currentUserId` from props — fixed

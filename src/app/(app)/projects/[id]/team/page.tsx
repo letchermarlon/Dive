@@ -31,11 +31,9 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
       .select('*')
       .eq('project_id', id),
     supabaseAdmin
-      .from('tasks')
-      .select('completed_at')
-      .eq('project_id', id)
-      .eq('status', 'done')
-      .not('completed_at', 'is', null),
+      .from('task_completions')
+      .select('completed_at, count')
+      .eq('project_id', id),
   ])
 
   // Fetch profiles separately (no FK defined between project_members.user_id and profiles.id)
@@ -71,12 +69,12 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
     .sort((a, b) => b.progressScore - a.progressScore)
     .slice(0, 3)
 
-  // Activity heatmap data from completed_at timestamps
+  // Activity heatmap data from task_completions history
   const activityMap: Record<string, number> = {}
-  for (const task of tasks ?? []) {
-    if (task.completed_at) {
-      const date = (task.completed_at as string).split('T')[0]
-      activityMap[date] = (activityMap[date] ?? 0) + 1
+  for (const row of tasks ?? []) {
+    if (row.completed_at) {
+      const date = (row.completed_at as string).split('T')[0]
+      activityMap[date] = (activityMap[date] ?? 0) + (row.count as number)
     }
   }
   const activityDays = Object.entries(activityMap).map(([date, count]) => ({ date, count }))

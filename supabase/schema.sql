@@ -102,6 +102,26 @@ create table team_stats (
   unique(user_id, project_id)
 );
 
+-- Task Completions (persistent history for the team activity heatmap)
+-- One row per user per submit-done batch, recording how many tasks they completed.
+create table task_completions (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  user_id text not null,
+  count int not null default 1,
+  completed_at timestamptz default now()
+);
+
+-- Summaries (AI-generated completion summaries)
+create table summaries (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  content text not null,
+  task_count int not null default 0,
+  created_by text,
+  created_at timestamptz default now()
+);
+
 -- Row Level Security (service role bypasses all; anon key is locked out)
 alter table profiles        enable row level security;
 alter table projects        enable row level security;
@@ -112,14 +132,18 @@ alter table focus_sessions  enable row level security;
 alter table sprint_reviews  enable row level security;
 alter table seafloor_state  enable row level security;
 alter table team_stats      enable row level security;
+alter table task_completions enable row level security;
+alter table summaries        enable row level security;
 
 -- Deny all anon access (service role bypasses RLS and is used for all operations)
-create policy "deny_anon" on profiles        for all using (false);
-create policy "deny_anon" on projects        for all using (false);
-create policy "deny_anon" on project_members for all using (false);
-create policy "deny_anon" on sprints         for all using (false);
-create policy "deny_anon" on tasks           for all using (false);
-create policy "deny_anon" on focus_sessions  for all using (false);
-create policy "deny_anon" on sprint_reviews  for all using (false);
-create policy "deny_anon" on seafloor_state  for all using (false);
-create policy "deny_anon" on team_stats      for all using (false);
+create policy "deny_anon" on profiles         for all using (false);
+create policy "deny_anon" on projects         for all using (false);
+create policy "deny_anon" on project_members  for all using (false);
+create policy "deny_anon" on sprints          for all using (false);
+create policy "deny_anon" on tasks            for all using (false);
+create policy "deny_anon" on focus_sessions   for all using (false);
+create policy "deny_anon" on sprint_reviews   for all using (false);
+create policy "deny_anon" on seafloor_state   for all using (false);
+create policy "deny_anon" on team_stats       for all using (false);
+create policy "deny_anon" on task_completions for all using (false);
+create policy "deny_anon" on summaries        for all using (false);

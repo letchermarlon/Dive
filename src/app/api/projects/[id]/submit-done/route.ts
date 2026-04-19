@@ -126,8 +126,18 @@ Return plain text only. No markdown. Use exactly the section headers shown.`
     }
   }
 
-  await Promise.all(
-    Object.entries(memberTaskCounts).map(async ([uid, count]) => {
+  await Promise.all([
+    // Insert one completion record per member for the heatmap
+    supabaseAdmin.from('task_completions').insert(
+      Object.entries(memberTaskCounts).map(([uid, count]) => ({
+        project_id: projectId,
+        user_id: uid,
+        count,
+        completed_at: now.toISOString(),
+      }))
+    ),
+    // Update team_stats and seafloor_state per member
+    ...Object.entries(memberTaskCounts).map(async ([uid, count]) => {
       const { data: stat } = await supabaseAdmin
         .from('team_stats')
         .select('completed_tasks')
@@ -147,8 +157,8 @@ Return plain text only. No markdown. Use exactly the section headers shown.`
           { onConflict: 'user_id,project_id' }
         ),
       ])
-    })
-  )
+    }),
+  ])
 
   await supabaseAdmin.from('tasks').delete().eq('project_id', projectId).eq('status', 'done')
 
