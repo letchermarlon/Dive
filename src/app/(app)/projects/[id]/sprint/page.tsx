@@ -26,10 +26,9 @@ export default async function SprintBoardPage({ params }: { params: Promise<{ id
 
   const sprint = sprints?.[0] ?? null
 
-  type MemberRaw = { user_id: string; profiles: { username: string | null; email: string } | null }
   const memberMap = Object.fromEntries(
-    (members as MemberRaw[] ?? []).map(m => {
-      const profile = m.profiles
+    (members ?? []).map(m => {
+      const profile = m.profiles as unknown as { username: string | null; email: string } | null
       const name = profile?.username ?? profile?.email?.split('@')[0] ?? 'Unknown'
       return [m.user_id, name]
     })
