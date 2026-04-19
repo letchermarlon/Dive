@@ -73,7 +73,7 @@ export default function HomeExperience() {
             )}
           >
             <SignInForm
-              className="border-white/15 bg-black/70 shadow-[0_25px_90px_rgba(0,0,0,0.45)]"
+              className="max-w-md"
               onBack={closeAuth}
             />
           </div>
