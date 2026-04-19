@@ -127,10 +127,7 @@ function IsoFish({ yPos, dur, delay, rtl, small }: FishCfg) {
   const fill = small ? '#bbe1fa' : '#3282b8'
   const fin  = small ? '#9acae8' : '#205c8a'
   return (
-    <g>
-      <animate attributeName="opacity"
-        values="0;1;1;0" keyTimes="0;0.12;0.88;1"
-        dur={`${dur}s`} begin={`-${delay}s`} repeatCount="indefinite" />
+    <g style={{ animation: `fish-fade ${dur}s linear -${delay}s infinite` }}>
       <animateTransform attributeName="transform" type="translate"
         from={rtl ? `${FISH_RANGE} 0` : `${-FISH_RANGE} 0`}
         to={rtl ? `${-FISH_RANGE} 0` : `${FISH_RANGE} 0`}
@@ -388,6 +385,10 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
       </div>
 
       <style>{`
+        @keyframes fish-fade {
+          0%, 100% { opacity: 0; }
+          12%, 88% { opacity: 1; }
+        }
         @keyframes iso-caustic {
           0%, 100% { opacity: 0.6; transform: scale(1); }
           50%       { opacity: 1;   transform: scale(1.08); }
