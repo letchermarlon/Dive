@@ -3,7 +3,7 @@
 import { useRef, useCallback } from "react";
 
 // Cooldown between alerts so it doesn't spam
-const ALERT_COOLDOWN_MS = 5000;
+const ALERT_COOLDOWN_MS = 1000;
 
 // Generates a bell/chime tone using Web Audio API — no files needed
 function playChime(ctx: AudioContext) {
