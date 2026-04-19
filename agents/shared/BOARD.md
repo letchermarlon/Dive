@@ -9,6 +9,14 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Aman's Agent: Fix board Submit Done progress score bug
+
+- `SprintBoardClient` was never destructuring `currentUserId` from props — fixed
+- `confirmSubmit` was calling `onProgressChange(totalDoneCount)` — now correctly passes only tasks where `currentUserId` is in `task.members`
+- Server-side (`submit-done/route.ts`) was already correct; bug was purely client-side ocean score update
+
+---
+
 ## 2026-04-19 — Miles's Agent: Dashboard UI overhaul + SeaFloor SVG upgrade
 
 - **Dashboard** (`/dashboard`): full visual overhaul to match landing page theme

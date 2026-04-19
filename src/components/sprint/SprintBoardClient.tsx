@@ -49,7 +49,7 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[h]
 }
 
-export default function SprintBoardClient({ projectId, projectName, initialTasks, members, memberNames, hideHeader, onProgressChange }: Props) {
+export default function SprintBoardClient({ projectId, projectName, initialTasks, currentUserId, members, memberNames, hideHeader, onProgressChange }: Props) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [addingTitle, setAddingTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
@@ -199,8 +199,8 @@ export default function SprintBoardClient({ projectId, projectName, initialTasks
       setSubmitting(false)
       return
     }
-    const doneCount = tasks.filter(t => t.status === 'done').length
-    if (onProgressChange) onProgressChange(doneCount)
+    const myDoneCount = tasks.filter(t => t.status === 'done' && t.members.includes(currentUserId)).length
+    if (onProgressChange) onProgressChange(myDoneCount)
     setTasks(prev => prev.filter(t => t.status !== 'done'))
     setShowConfirm(false)
     setSubmitting(false)
