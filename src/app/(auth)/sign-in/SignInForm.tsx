@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-export default function SignInForm() {
+type SignInFormProps = {
+  className?: string;
+  onBack?: () => void;
+};
+
+export default function SignInForm({ className, onBack }: SignInFormProps) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,6 +42,7 @@ export default function SignInForm() {
     <div
       className={cn(
         "flex flex-col gap-6 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl p-8 shadow-2xl",
+        className,
       )}
     >
       <div className="flex flex-col items-center gap-2 text-center">
@@ -113,6 +119,16 @@ export default function SignInForm() {
         </a>
         .
       </p>
+
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-xs text-center text-white/45 transition-colors hover:text-white/75"
+        >
+          Back to overview
+        </button>
+      ) : null}
     </div>
   );
 }
