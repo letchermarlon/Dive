@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function CameraPreview() {
-  const { status, videoRef, startCamera, stopCamera, cameraStatus, gazeResult, isModelLoaded } = useFocusMonitor();
+  const { status, videoRef, startCamera, stopCamera, cameraStatus, gazeResult, isGazeModelLoaded, isPhoneModelLoaded } = useFocusMonitor();
 
   return (
     <div className="flex flex-col items-center gap-4 p-6">
@@ -40,10 +40,11 @@ export function CameraPreview() {
           {STATUS_LABELS[status]}
         </div>
 
-        {/* Debug overlay — yaw/pitch for threshold tuning */}
+        {/* Debug overlay — model status + gaze values for threshold tuning */}
         {cameraStatus === "active" && (
           <div className="absolute bottom-3 left-3 text-xs text-white/70 font-mono space-y-0.5">
-            <div>model: {isModelLoaded ? "ready" : "loading…"}</div>
+            <div>gaze model: {isGazeModelLoaded ? "ready" : "loading…"}</div>
+            <div>phone model: {isPhoneModelLoaded ? "ready" : "loading…"}</div>
             <div>yaw: {gazeResult.yaw.toFixed(1)}°</div>
             <div>pitch: {gazeResult.pitch.toFixed(1)}°</div>
           </div>

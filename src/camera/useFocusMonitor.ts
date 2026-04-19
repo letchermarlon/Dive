@@ -14,13 +14,14 @@ export type FocusMonitorResult = {
   stopCamera: () => void;
   cameraStatus: ReturnType<typeof useCamera>["status"];
   gazeResult: GazeResult;
-  isModelLoaded: boolean;
+  isGazeModelLoaded: boolean;
+  isPhoneModelLoaded: boolean;
 };
 
 export function useFocusMonitor(): FocusMonitorResult {
   const { videoRef, status: cameraStatus, start, stop } = useCamera();
-  const { gazeResult, isModelLoaded } = useGazeDetection(videoRef);
-  const { phoneState } = usePhoneDetection(videoRef);
+  const { gazeResult, isModelLoaded: isGazeModelLoaded } = useGazeDetection(videoRef);
+  const { phoneState, isModelLoaded: isPhoneModelLoaded } = usePhoneDetection(videoRef);
 
   let status: FocusStatus = "camera-off";
   if (cameraStatus === "active") {
@@ -30,5 +31,5 @@ export function useFocusMonitor(): FocusMonitorResult {
     else status = "focused";
   }
 
-  return { status, videoRef, startCamera: start, stopCamera: stop, cameraStatus, gazeResult, isModelLoaded };
+  return { status, videoRef, startCamera: start, stopCamera: stop, cameraStatus, gazeResult, isGazeModelLoaded, isPhoneModelLoaded };
 }
