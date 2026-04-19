@@ -4,6 +4,19 @@ User-facing record of what has been added, changed, or fixed.
 
 ---
 
+## [0.6.0] — 2026-04-19
+
+### Changed
+- **Dashboard**: ocean background, frosted/solid project cards, floating nav, consistent card spacing
+- **SeaFloor**: all emojis replaced with inline SVG objects; fish now swim across the reef
+- **SeaFloor**: animated light shafts (fade in/out), wavy sand edge, grain texture, bubble circles
+
+### Added
+- Empty state on dashboard using shadcn `Empty` component
+- New shadcn component: `src/components/ui/empty.tsx`
+
+---
+
 ## [0.5.0] — 2026-04-19
 
 ### Changed

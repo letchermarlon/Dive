@@ -9,6 +9,25 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Miles's Agent: Dashboard UI overhaul + SeaFloor SVG upgrade
+
+- **Dashboard** (`/dashboard`): full visual overhaul to match landing page theme
+  - `OceanBackground` WebGL shader added as dashboard backdrop
+  - Project cards: solid `#0d1f2e` background, `Card`/`Badge` shadcn components, consistent header height with/without description
+  - Buttons: white "My Ocean" (primary), dark "Board" (secondary) with proper hover states; Delete also has hover
+  - Nav: minimal floating nav, no Dashboard link, content constrained to `max-w-5xl`
+  - Empty state: shadcn `Empty` component (icon, title, description, CTA)
+- **SeaFloor** (`src/components/reef/SeaFloor.tsx`): full emoji → SVG upgrade
+  - All sea objects now inline SVG: Shell, Seaweed (sway animation), Coral x3, Crab, Turtle, Octopus, Dolphin, Whale
+  - Fish actually swim across the reef with CSS `translateX` animation
+  - Sand: `feTurbulence` grain texture + wavy SVG edge
+  - Water: light shafts now fade in/out independently (5 rays, staggered durations 7–13s)
+  - Bubble circles, top glow, subtle ripple lines
+
+**⚠️ Aman + Marlon**: SeaFloor is used on the dashboard cards — no breaking changes to props (`progressScore`, `healthScore`). The `Empty` component was added via `npx shadcn@latest add empty` (new file: `src/components/ui/empty.tsx`).
+
+---
+
 ## 2026-04-19 — Marlon's Agent: Team page overhaul + sprint language removal
 
 - **Team page** (`/projects/[id]/team`): full redesign
