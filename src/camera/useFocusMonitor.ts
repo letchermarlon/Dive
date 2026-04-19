@@ -1,9 +1,11 @@
 // Combines gaze + phone signals into a single FocusStatus
 // This is the one hook session components will import
 
+import { useEffect, useRef } from "react";
 import { useCamera } from "./useCamera";
 import { useGazeDetection, type GazeResult } from "./useGazeDetection";
 import { usePhoneDetection } from "./usePhoneDetection";
+import { useAlertSound } from "./useAlertSound";
 
 export type FocusStatus = "focused" | "looking-away" | "phone-detected" | "no-face" | "camera-off";
 
@@ -22,6 +24,8 @@ export function useFocusMonitor(): FocusMonitorResult {
   const { videoRef, status: cameraStatus, start, stop } = useCamera();
   const { gazeResult, isModelLoaded: isGazeModelLoaded } = useGazeDetection(videoRef);
   const { phoneState, isModelLoaded: isPhoneModelLoaded } = usePhoneDetection(videoRef);
+  const { playAlert } = useAlertSound();
+  const prevStatusRef = useRef<FocusStatus>("camera-off");
 
   let status: FocusStatus = "camera-off";
   if (cameraStatus === "active") {
@@ -30,6 +34,14 @@ export function useFocusMonitor(): FocusMonitorResult {
     else if (gazeResult.state === "looking-away") status = "looking-away";
     else status = "focused";
   }
+
+  // Play chime when entering a distracted state
+  useEffect(() => {
+    const wasDistracted = prevStatusRef.current === "looking-away" || prevStatusRef.current === "phone-detected";
+    const isDistracted = status === "looking-away" || status === "phone-detected";
+    if (isDistracted && !wasDistracted) playAlert();
+    prevStatusRef.current = status;
+  }, [status, playAlert]);
 
   return { status, videoRef, startCamera: start, stopCamera: stop, cameraStatus, gazeResult, isGazeModelLoaded, isPhoneModelLoaded };
 }
