@@ -24,8 +24,9 @@ const DECO = ['rock', 'sanddollar', 'seaweed', 'coral'] as const
 type Deco = typeof DECO[number]
 
 function tileDeco(col: number, row: number): Deco {
-  // Use only abs values so negative coords (island grows in all directions) hash cleanly
-  const h = Math.abs(col) * 31 + Math.abs(row) * 17 + Math.abs(col + row) * 7
+  // Previous formula always produced even numbers (only rock/seaweed appeared).
+  // Adding (col+row+1)*3 breaks the parity lock and gives all 4 types.
+  const h = Math.abs(col * 31 + row * 17 + (col ^ row) * 7 + (col + row + 1) * 3)
   return DECO[h % 4]
 }
 
@@ -188,7 +189,9 @@ export default function IsoOcean({ gridTiles, progressScore, healthScore, streak
   }, [gridTiles])
 
   // ── Fish count (visual cap) ─────────────────────────────────────────────
-  const fishCount = Math.min(MAX_FISH, Math.max(0, progressScore - gridTiles.length))
+  // Fish scale with decorated tile count (1 fish per 3 objects), capped for performance
+  const decoratedCount = Math.min(progressScore, gridTiles.length)
+  const fishCount = Math.min(MAX_FISH, Math.floor(decoratedCount / 3))
 
   // ── Wheel zoom (non-passive) ────────────────────────────────────────────
   useEffect(() => {
