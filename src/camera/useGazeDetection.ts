@@ -45,10 +45,14 @@ function computeHeadPose(lm: Landmark[]): { yaw: number; pitch: number } {
   return { yaw, pitch };
 }
 
+const ERROR_THRESHOLD = 3; // stop rAF loop after this many consecutive detectForVideo failures
+
 export function useGazeDetection(videoRef: React.RefObject<HTMLVideoElement | null>) {
   const landmarkerRef = useRef<FaceLandmarker | null>(null);
   const rafRef = useRef<number | null>(null);
+  const consecutiveErrorsRef = useRef(0);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [gazeResult, setGazeResult] = useState<GazeResult>({
     state: "no-face",
     yaw: 0,
@@ -60,13 +64,13 @@ export function useGazeDetection(videoRef: React.RefObject<HTMLVideoElement | nu
     let cancelled = false;
     async function loadModel() {
       const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
       );
       const landmarker = await FaceLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath:
             "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU",
+          delegate: "CPU",
         },
         runningMode: "VIDEO",
         numFaces: 1,
@@ -89,22 +93,33 @@ export function useGazeDetection(videoRef: React.RefObject<HTMLVideoElement | nu
       const landmarker = landmarkerRef.current;
 
       if (video && landmarker && video.readyState >= 2 && !video.paused) {
-        const results = landmarker.detectForVideo(video, performance.now());
-        const face = results.faceLandmarks?.[0];
+        try {
+          const results = landmarker.detectForVideo(video, performance.now());
+          consecutiveErrorsRef.current = 0;
+          const face = results.faceLandmarks?.[0];
 
-        if (!face || face.length === 0) {
-          setGazeResult({ state: "no-face", yaw: 0, pitch: 0 });
-        } else {
-          const { yaw, pitch } = computeHeadPose(face as Landmark[]);
-          let state: GazeState = "focused";
-          if (
-            Math.abs(yaw) > YAW_THRESHOLD ||
-            pitch < PITCH_UP_THRESHOLD ||
-            pitch > PITCH_DOWN_THRESHOLD
-          ) {
-            state = "looking-away";
+          if (!face || face.length === 0) {
+            setGazeResult({ state: "no-face", yaw: 0, pitch: 0 });
+          } else {
+            const { yaw, pitch } = computeHeadPose(face as Landmark[]);
+            let state: GazeState = "focused";
+            if (
+              Math.abs(yaw) > YAW_THRESHOLD ||
+              pitch < PITCH_UP_THRESHOLD ||
+              pitch > PITCH_DOWN_THRESHOLD
+            ) {
+              state = "looking-away";
+            }
+            setGazeResult({ state, yaw, pitch });
           }
-          setGazeResult({ state, yaw, pitch });
+        } catch (err) {
+          consecutiveErrorsRef.current += 1;
+          console.warn("detectForVideo error:", err);
+          if (consecutiveErrorsRef.current >= ERROR_THRESHOLD) {
+            console.error("Gaze detection disabled after repeated errors.");
+            setHasError(true);
+            return; // stop scheduling next frame
+          }
         }
       }
 
@@ -117,5 +132,5 @@ export function useGazeDetection(videoRef: React.RefObject<HTMLVideoElement | nu
     };
   }, [isModelLoaded, videoRef]);
 
-  return { gazeResult, isModelLoaded };
+  return { gazeResult, isModelLoaded, hasError };
 }
