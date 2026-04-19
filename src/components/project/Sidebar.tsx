@@ -13,10 +13,9 @@ interface SidebarProps {
 }
 
 const NAV = [
-  { id: 'ocean',     label: 'My Ocean',   icon: '🌊' },
-  { id: 'sprint',    label: 'Board',      icon: '📋' },
-  { id: 'team',      label: 'Team',       icon: '👥' },
-  { id: 'summaries', label: 'Summaries',  icon: '📝' },
+  { id: 'ocean',     label: 'My Ocean',  icon: '🌊' },
+  { id: 'summaries', label: 'Summaries', icon: '📝' },
+  { id: 'team',      label: 'Team',      icon: '👥' },
 ]
 
 export default function Sidebar({ projectId, projectName, userName, userInitials, userRole }: SidebarProps) {
