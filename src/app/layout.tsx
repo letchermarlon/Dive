@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from '@clerk/nextjs'
+import { Figtree } from "next/font/google";
+import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-figtree",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Dive — TideSprint",
@@ -14,8 +21,8 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="min-h-screen bg-ocean-950 text-ocean-50 antialiased">
+      <html lang="en" className={figtree.variable}>
+        <body className="min-h-screen bg-background text-foreground antialiased font-sans">
           {children}
         </body>
       </html>
