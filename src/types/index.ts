@@ -19,10 +19,21 @@ export type Task = {
   projectId: string;
   title: string;
   description: string;
-  status: "backlog" | "todo" | "doing" | "done" | "blocked";
+  status: "todo" | "doing" | "done";
+  members: string[];
   assignedTo?: string;
   estimatedMinutes?: number;
   sprintId?: string;
+  completedAt?: string;
+};
+
+export type Summary = {
+  id: string;
+  projectId: string;
+  content: string;
+  taskCount: number;
+  createdBy: string;
+  createdAt: string;
 };
 
 export type Sprint = {
@@ -70,11 +81,4 @@ export type AIPlanOutput = {
   currentSprint: { title: string; description: string }[];
   subtasks: { parentTitle: string; steps: string[] }[];
   recommendedFirstStep: string;
-};
-
-export type AIReviewOutput = {
-  reviewSummary: string;
-  nextSprintProposal: { title: string; description: string }[];
-  carryOver: string[];
-  improvements: string[];
 };

@@ -2,7 +2,17 @@
 import { useState } from 'react'
 import IsoOcean from '@/components/reef/IsoOcean'
 import FocusModal from '@/components/session/FocusModal'
-import { Task } from '@/types'
+
+type Status = 'todo' | 'doing' | 'done'
+
+interface Task {
+  id: string
+  projectId: string
+  title: string
+  description: string
+  status: Status
+  members: string[]
+}
 
 interface OceanViewProps {
   projectId: string
@@ -10,36 +20,25 @@ interface OceanViewProps {
   progressScore: number
   healthScore: number
   streakDays: number
-  sprintGoal: string
-  sprintName: string
-  daysLeft: number
-  totalSprintTasks: number
+  totalTasks: number
   doneTasks: number
   focusSessions: number
-  blockedCount: number
-  backlogCount: number
 }
 
-const BADGE_STYLE: Record<Task['status'], string> = {
-  doing:   'rgba(50,130,184,0.25)',
-  todo:    'rgba(187,225,250,0.1)',
-  blocked: 'rgba(180,80,80,0.25)',
-  done:    'rgba(50,180,100,0.2)',
-  backlog: 'rgba(187,225,250,0.08)',
+const BADGE_STYLE: Record<Status, string> = {
+  doing: 'rgba(50,130,184,0.25)',
+  todo:  'rgba(187,225,250,0.1)',
+  done:  'rgba(50,180,100,0.2)',
 }
-const BADGE_COLOR: Record<Task['status'], string> = {
-  doing:   '#bbe1fa',
-  todo:    'rgba(187,225,250,0.5)',
-  blocked: '#f88',
-  done:    '#7ef0a0',
-  backlog: 'rgba(187,225,250,0.5)',
+const BADGE_COLOR: Record<Status, string> = {
+  doing: '#bbe1fa',
+  todo:  'rgba(187,225,250,0.5)',
+  done:  '#7ef0a0',
 }
 
 export default function OceanView({
   projectId, tasks: initialTasks, progressScore: initialScore,
-  healthScore, streakDays, sprintGoal, sprintName, daysLeft,
-  totalSprintTasks, doneTasks: initialDone, focusSessions,
-  blockedCount, backlogCount,
+  healthScore, streakDays, totalTasks, doneTasks: initialDone, focusSessions,
 }: OceanViewProps) {
   const [tasks, setTasks] = useState(initialTasks)
   const [progressScore, setProgressScore] = useState(initialScore)
@@ -55,7 +54,7 @@ export default function OceanView({
   async function handleToggle(taskId: string) {
     const task = tasks.find(t => t.id === taskId)
     if (!task) return
-    const nextStatus: Task['status'] = task.status === 'done' ? 'todo' : 'done'
+    const nextStatus: Status = task.status === 'done' ? 'todo' : 'done'
     await fetch(`/api/tasks/${taskId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -79,9 +78,7 @@ export default function OceanView({
     showToast('🎉 Focus session complete! Ocean is growing.')
   }
 
-  const myTasks = tasks.filter(t => t.status !== 'backlog')
-  const myDone = myTasks.filter(t => t.status === 'done').length
-
+  const myDone = tasks.filter(t => t.status === 'done').length
   const firstDoingTask = tasks.find(t => t.status === 'doing')
 
   return (
@@ -98,24 +95,22 @@ export default function OceanView({
         <div>
           <div className="font-semibold text-lg" style={{ color: '#bbe1fa' }}>My Ocean</div>
           <div className="text-xs mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>
-            TideSprint · {sprintName} active
+            Your personal progress view
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
-          {firstDoingTask && (
-            <button
-              onClick={() => setFocusTask(firstDoingTask)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={{
-                background: 'rgba(15,76,117,0.25)',
-                border: '1px solid rgba(187,225,250,0.12)',
-                color: '#bbe1fa',
-              }}
-            >
-              ⏱ Focus session
-            </button>
-          )}
-        </div>
+        {firstDoingTask && (
+          <button
+            onClick={() => setFocusTask(firstDoingTask)}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={{
+              background: 'rgba(15,76,117,0.25)',
+              border: '1px solid rgba(187,225,250,0.12)',
+              color: '#bbe1fa',
+            }}
+          >
+            ⏱ Focus session
+          </button>
+        )}
       </div>
 
       {/* Ocean visual */}
@@ -124,40 +119,17 @@ export default function OceanView({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(187,225,250,0.12) transparent' }}>
         <div className="p-7">
-          {/* Sprint banner */}
-          <div
-            className="flex items-center justify-between rounded-xl px-[18px] py-3.5 mb-4"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15,76,117,0.5), rgba(50,130,184,0.2))',
-              border: '1px solid rgba(50,130,184,0.3)',
-            }}
-          >
-            <div>
-              <div className="text-[10px] uppercase tracking-[1px]" style={{ color: 'rgba(187,225,250,0.5)' }}>
-                {sprintName} · Active
-              </div>
-              <div className="text-sm font-semibold mt-0.5" style={{ color: '#bbe1fa' }}>{sprintGoal}</div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold text-[28px] leading-none" style={{ color: '#bbe1fa', fontFamily: 'var(--font-figtree)' }}>
-                {daysLeft}
-              </div>
-              <div className="text-[10px]" style={{ color: 'rgba(187,225,250,0.5)' }}>days left</div>
-            </div>
-          </div>
-
-          {/* Two-col grid */}
           <div className="grid grid-cols-2 gap-4">
             {/* My tasks */}
             <div className="rounded-xl p-4" style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold" style={{ color: '#bbe1fa' }}>My tasks this sprint</span>
-                <span className="text-[11px]" style={{ color: 'rgba(187,225,250,0.5)' }}>{myDone}/{myTasks.length} done</span>
+                <span className="text-sm font-semibold" style={{ color: '#bbe1fa' }}>My tasks</span>
+                <span className="text-[11px]" style={{ color: 'rgba(187,225,250,0.5)' }}>{myDone}/{tasks.length} done</span>
               </div>
-              {myTasks.length === 0 && (
+              {tasks.length === 0 && (
                 <p className="text-xs text-center py-4" style={{ color: 'rgba(187,225,250,0.4)' }}>No tasks assigned yet</p>
               )}
-              {myTasks.map(t => (
+              {tasks.map(t => (
                 <div
                   key={t.id}
                   className="flex items-center gap-2.5 py-2"
@@ -167,7 +139,7 @@ export default function OceanView({
                     onClick={() => handleToggle(t.id)}
                     className="w-[18px] h-[18px] rounded-[5px] flex items-center justify-center flex-shrink-0 transition-all"
                     style={{
-                      border: `2px solid ${t.status === 'done' ? '#3282b8' : '#3282b8'}`,
+                      border: '2px solid #3282b8',
                       background: t.status === 'done' ? '#3282b8' : 'transparent',
                     }}
                   >
@@ -186,7 +158,7 @@ export default function OceanView({
                     className="text-[10px] px-[7px] py-0.5 rounded-full font-semibold"
                     style={{ background: BADGE_STYLE[t.status], color: BADGE_COLOR[t.status] }}
                   >
-                    {t.status}
+                    {t.status === 'doing' ? 'in progress' : t.status}
                   </span>
                   {t.status !== 'done' && (
                     <button
@@ -205,18 +177,18 @@ export default function OceanView({
               ))}
             </div>
 
-            {/* Sprint stats */}
+            {/* Project stats */}
             <div className="rounded-xl p-4" style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}>
-              <div className="text-sm font-semibold mb-3" style={{ color: '#bbe1fa' }}>Sprint progress</div>
+              <div className="text-sm font-semibold mb-3" style={{ color: '#bbe1fa' }}>Project progress</div>
               <div className="flex justify-between mb-1">
                 <span className="text-xs" style={{ color: 'rgba(187,225,250,0.5)' }}>Tasks completed</span>
-                <span className="text-xs font-semibold" style={{ color: '#bbe1fa' }}>{doneTasks} / {totalSprintTasks}</span>
+                <span className="text-xs font-semibold" style={{ color: '#bbe1fa' }}>{doneTasks} / {totalTasks}</span>
               </div>
               <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(187,225,250,0.1)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: totalSprintTasks > 0 ? `${(doneTasks / totalSprintTasks) * 100}%` : '0%',
+                    width: totalTasks > 0 ? `${(doneTasks / totalTasks) * 100}%` : '0%',
                     background: 'linear-gradient(90deg, #3282b8, #bbe1fa)',
                   }}
                 />
@@ -225,14 +197,10 @@ export default function OceanView({
                 {[
                   { label: 'Focus sessions', val: focusSessions, icon: '⏱' },
                   { label: 'Streak',         val: `${streakDays}d`, icon: '🔥' },
-                  { label: 'Blocked',        val: blockedCount, icon: '⚠' },
-                  { label: 'Backlog',        val: backlogCount, icon: '📋' },
+                  { label: 'My done',        val: myDone, icon: '✅' },
+                  { label: 'Ocean score',    val: progressScore, icon: '🌊' },
                 ].map(s => (
-                  <div
-                    key={s.label}
-                    className="rounded-lg px-2.5 py-2"
-                    style={{ background: 'rgba(0,0,0,0.2)' }}
-                  >
+                  <div key={s.label} className="rounded-lg px-2.5 py-2" style={{ background: 'rgba(0,0,0,0.2)' }}>
                     <div className="text-base mb-0.5">{s.icon}</div>
                     <div className="font-bold text-xl leading-none" style={{ color: '#bbe1fa', fontFamily: 'var(--font-figtree)' }}>{s.val}</div>
                     <div className="text-[10px] mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>{s.label}</div>

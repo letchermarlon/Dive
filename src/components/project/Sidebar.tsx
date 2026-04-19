@@ -13,10 +13,10 @@ interface SidebarProps {
 }
 
 const NAV = [
-  { id: 'ocean',  label: 'My Ocean',     icon: '🌊' },
-  { id: 'sprint', label: 'Sprint Board', icon: '📋' },
-  { id: 'team',   label: 'Team',         icon: '👥' },
-  { id: 'review', label: 'Review',       icon: '✅' },
+  { id: 'ocean',     label: 'My Ocean',   icon: '🌊' },
+  { id: 'sprint',    label: 'Board',      icon: '📋' },
+  { id: 'team',      label: 'Team',       icon: '👥' },
+  { id: 'summaries', label: 'Summaries',  icon: '📝' },
 ]
 
 export default function Sidebar({ projectId, projectName, userName, userInitials, userRole }: SidebarProps) {
@@ -27,6 +27,7 @@ export default function Sidebar({ projectId, projectName, userName, userInitials
 
   function isActive(id: string) {
     if (id === 'ocean') return activeSection === 'ocean' || activeSection === projectId
+    if (id === 'sprint') return activeSection === 'sprint'
     return activeSection === id
   }
 

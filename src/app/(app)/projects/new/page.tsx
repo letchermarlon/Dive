@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TopNav from '@/components/TopNav'
-import { AIPlanOutput } from '@/types'
 
 const inputStyle = {
   width: '100%',
@@ -21,7 +20,7 @@ const cardStyle = {
   background: 'rgba(15,76,117,0.25)',
   border: '1px solid rgba(187,225,250,0.12)',
   borderRadius: 12,
-  padding: 16,
+  padding: 20,
 }
 
 export default function NewProjectPage() {
@@ -36,31 +35,21 @@ export default function NewProjectPage() {
     setLoading(true)
     setError('')
 
-    // Generate plan then immediately create project — no review step
-    const planRes = await fetch('/api/ai/plan', {
+    const res = await fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ goal, teamSize: 1 }),
+      body: JSON.stringify({ name, goal }),
     })
-    const planData = await planRes.json()
-    if (planData.error) { setError(planData.error); setLoading(false); return }
+    const data = await res.json()
+    if (data.error) { setError(data.error); setLoading(false); return }
 
-    const plan = planData.plan as AIPlanOutput
-    const projectRes = await fetch('/api/projects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, goal, plan }),
-    })
-    const projectData = await projectRes.json()
-    if (projectData.error) { setError(projectData.error); setLoading(false); return }
-
-    router.push(`/projects/${projectData.projectId}/ocean`)
+    router.push(`/projects/${data.projectId}/sprint`)
   }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0d1f26' }}>
       <TopNav />
-      <main className="flex-1 p-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 p-6 max-w-lg mx-auto w-full">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -69,34 +58,37 @@ export default function NewProjectPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 pt-8">
             <div>
               <h1 className="text-2xl font-bold" style={{ color: '#bbe1fa' }}>New project</h1>
               <p className="text-sm mt-1" style={{ color: 'rgba(187,225,250,0.5)' }}>
-                Describe your goal — AI will build your sprint plan automatically.
+                Give your project a name and you&apos;re ready to dive in.
               </p>
             </div>
             <div style={cardStyle}>
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(187,225,250,0.5)' }}>Project name</label>
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(187,225,250,0.5)' }}>
+                    Project name
+                  </label>
                   <input
                     style={inputStyle}
-                    placeholder="e.g. Study for calculus exam"
+                    placeholder="e.g. Website redesign"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(187,225,250,0.5)' }}>Project goal</label>
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(187,225,250,0.5)' }}>
+                    Description <span style={{ color: 'rgba(187,225,250,0.3)', fontWeight: 400 }}>(optional)</span>
+                  </label>
                   <textarea
                     style={inputStyle}
-                    placeholder="Describe what you're trying to accomplish. The more detail, the better the plan."
+                    placeholder="What are you trying to accomplish?"
                     value={goal}
                     onChange={e => setGoal(e.target.value)}
-                    rows={4}
-                    required
+                    rows={3}
                   />
                 </div>
                 {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -105,7 +97,7 @@ export default function NewProjectPage() {
                   className="py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
                   style={{ background: '#3282b8', color: 'white' }}
                 >
-                  🤿 Start diving
+                  🤿 Create project
                 </button>
               </form>
             </div>

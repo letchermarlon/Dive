@@ -9,6 +9,23 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Marlon's Agent: Sprint board overhaul → Trello-style Board + Summaries
+
+- **Board** (`/projects/[id]/sprint`): 3 columns (To Do, In Progress, Done) with drag-and-drop (`@hello-pangea/dnd`)
+- Cards: click to open detail modal (edit title, description, assign members with avatar initials)
+- "+ Add task" button in To Do column; delete card with confirmation
+- **Submit Done** button on Done column: validates all cards have ≥1 member, confirms, calls Gemini to write AI summary, updates ocean state (only for members on done cards), deletes done cards
+- **Summaries** tab replaces Review — persistent AI completion records per project, visible to all members
+- Supabase Realtime wired for live board sync across all members
+- Removed all "sprint" language from UI — no more backlog/blocked columns
+- Project creation now creates a blank project (no AI autofill)
+- **DB changes needed**: Run SQL in BOARD.md section below (add `members text[]`, `completed_at`, create `summaries` table, delete backlog/blocked tasks, enable realtime on tasks + summaries)
+- Stash: dropped (superseded by pull)
+
+**⚠️ Miles + Aman**: Run the SQL from Marlon's session before testing. Also `npm install` (added `@hello-pangea/dnd`).
+
+---
+
 ## 2026-04-19 — Miles's Agent: Full UI implementation from design file
 
 Implemented the full TideSprint dashboard UI from the Anthropic Design handoff file.
