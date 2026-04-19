@@ -91,19 +91,13 @@ export default async function DashboardPage() {
                       healthScore={project.floor?.health_score ?? 100}
                     />
                   </CardContent>
-                  <CardContent className="flex gap-2">
+                  <CardContent>
                     <Link
                       href={`/projects/${project.id}/ocean`}
-                      className="flex-1 text-center py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-75"
+                      className="block w-full text-center py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-75"
                       style={{ background: 'white', color: '#0d1f2e' }}
                     >
                       My Ocean
-                    </Link>
-                    <Link
-                      href={`/projects/${project.id}/sprint`}
-                      className="flex-1 text-center py-2 rounded-lg text-sm font-semibold border border-white/15 transition-colors text-white/70 hover:bg-white/15 hover:text-white"
-                    >
-                      Board
                     </Link>
                   </CardContent>
                   {project.role === 'owner' && (
