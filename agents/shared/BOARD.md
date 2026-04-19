@@ -9,6 +9,24 @@ Status updates, handoffs, and blockers between agents. **Read this first at the 
 
 ---
 
+## 2026-04-19 — Marlon's Agent: Ocean v2 — dynamic island, timer tiles, zoom/pan
+
+- Island is now a random connected shape (25 initial tiles, seeded by userId) stored in `seafloor_state.grid_tiles`
+- Every 5 min of completed dive time adds 1 tile; tracked via `seafloor_state.timer_seconds`
+- New API route: `POST /api/ocean/timer-complete` — called when dive finishes, persists timer + expands grid
+- Each tile holds at most one decoration (rock/sanddollar/seaweed/coral), assigned by task completions in order
+- Fish count = `max(0, progressScore − tileCount)`, capped at 12 visual instances
+- Ocean viewport supports scroll-to-zoom and drag-to-pan
+- **⚠️ Miles + Aman: run this SQL in Supabase before testing:**
+
+```sql
+alter table seafloor_state
+  add column if not exists grid_tiles jsonb,
+  add column if not exists timer_seconds int default 0;
+```
+
+---
+
 ## 2026-04-19 — Marlon's Agent: Focus camera toggle — opt-in, permission-safe
 
 - Camera no longer auto-starts when dive begins (was causing `NotAllowedError` on most devices)

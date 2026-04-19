@@ -88,8 +88,17 @@ create table seafloor_state (
   progress_score int default 0,
   streak_days int default 0,
   last_activity_at timestamptz default now(),
+  -- Ocean grid: tile positions for the random island shape
+  grid_tiles jsonb,
+  -- Accumulated dive-timer seconds (1 new tile per 5 minutes = 300 s)
+  timer_seconds int default 0,
   unique(user_id, project_id)
 );
+
+-- Migration (run this if the table already exists):
+-- alter table seafloor_state
+--   add column if not exists grid_tiles jsonb,
+--   add column if not exists timer_seconds int default 0;
 
 -- Team Stats (per user per project)
 create table team_stats (

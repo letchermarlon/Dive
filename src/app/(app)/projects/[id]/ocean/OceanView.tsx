@@ -4,6 +4,7 @@ import IsoOcean from '@/components/reef/IsoOcean'
 import FocusModal from '@/components/session/FocusModal'
 import SprintBoardClient from '@/components/sprint/SprintBoardClient'
 import { useFocusMonitor } from '@/camera/useFocusMonitor'
+import type { GridTile } from '@/types'
 
 type Status = 'todo' | 'doing' | 'done'
 type DivePhase = 'setup' | 'running' | 'paused' | 'done'
@@ -33,6 +34,7 @@ interface OceanViewProps {
   progressScore: number
   healthScore: number
   streakDays: number
+  initialGridTiles: GridTile[]
 }
 
 const PRESETS = [
@@ -52,9 +54,11 @@ export default function OceanView({
   projectId, projectName, tasks: initialTasks, allTasks,
   members, memberNames, currentUserId,
   progressScore: initialScore, healthScore, streakDays,
+  initialGridTiles,
 }: OceanViewProps) {
   const [tasks, setTasks] = useState(initialTasks)
   const [progressScore, setProgressScore] = useState(initialScore)
+  const [gridTiles, setGridTiles] = useState<GridTile[]>(initialGridTiles)
   const [focusTask, setFocusTask] = useState<Task | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -71,9 +75,9 @@ export default function OceanView({
   const [customMinutes, setCustomMinutes] = useState('25')
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const focusStatusRef = useRef(focusStatus)
-  const endTimeRef = useRef<number>(0)       // 0 = not yet initialized; set on first tick
+  const endTimeRef = useRef<number>(0)
   const diveTotalRef = useRef<number>(25 * 60)
-  const noFaceSinceRef = useRef<number>(0)   // when no-face pause began (0 = not paused)
+  const noFaceSinceRef = useRef<number>(0)
   useEffect(() => { focusStatusRef.current = focusStatus }, [focusStatus])
 
   useEffect(() => {
@@ -86,12 +90,10 @@ export default function OceanView({
         if (noFaceSinceRef.current === 0) noFaceSinceRef.current = Date.now()
         return
       }
-      // Resume after no-face pause: extend end time by pause duration
       if (noFaceSinceRef.current > 0) {
         if (endTimeRef.current > 0) endTimeRef.current += Date.now() - noFaceSinceRef.current
         noFaceSinceRef.current = 0
       }
-      // Initialize end time on first live tick (avoids fast-forward from WASM load hang)
       if (endTimeRef.current === 0) {
         endTimeRef.current = Date.now() + diveTotalRef.current * 1000
         return
@@ -104,7 +106,7 @@ export default function OceanView({
   }, [divePhase])
 
   function startDive(seconds: number) {
-    endTimeRef.current = 0  // will be set on first tick, after any blocking load
+    endTimeRef.current = 0
     diveTotalRef.current = seconds
     noFaceSinceRef.current = 0
     setDiveTotal(seconds)
@@ -128,9 +130,22 @@ export default function OceanView({
     stopCamera()
   }
 
-  // Stop camera when timer naturally finishes
+  // When dive completes: stop camera + record timer time
   useEffect(() => {
-    if (divePhase === 'done') stopCamera()
+    if (divePhase !== 'done') return
+    stopCamera()
+    const seconds = diveTotalRef.current
+    fetch('/api/ocean/timer-complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId, seconds }),
+    })
+      .then(r => r.json())
+      .then(({ data }) => {
+        if (Array.isArray(data?.gridTiles)) setGridTiles(data.gridTiles)
+      })
+      .catch(console.error)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [divePhase])
 
   function showToast(msg: string) {
@@ -145,8 +160,6 @@ export default function OceanView({
   }
 
   const firstDoingTask = tasks.find(t => t.status === 'doing')
-
-  // SVG ring for timer
 
   return (
     <div className="flex flex-col" style={{ height: '100%', overflow: 'hidden' }}>
@@ -199,7 +212,12 @@ export default function OceanView({
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(187,225,250,0.12) transparent' }}>
 
         {/* Ocean visual */}
-        <IsoOcean progressScore={progressScore} healthScore={healthScore} streakDays={streakDays} />
+        <IsoOcean
+          gridTiles={gridTiles}
+          progressScore={progressScore}
+          healthScore={healthScore}
+          streakDays={streakDays}
+        />
 
         {/* Dive button */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 28px' }}>

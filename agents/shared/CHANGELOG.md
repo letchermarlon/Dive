@@ -4,6 +4,19 @@ User-facing record of what has been added, changed, or fixed.
 
 ---
 
+## [0.7.0] — 2026-04-19
+
+### Changed
+- **My Ocean**: island is now a random connected shape (seeded per user) instead of a fixed 5×5 square
+- **My Ocean**: each completed dive timer adds accumulated seconds; every 5 min = 1 new tile grows onto your island
+- **My Ocean**: each tile can hold exactly one decoration (rock, sand dollar, seaweed, or coral) — unlocked by tasks
+- **My Ocean**: fish count grows unboundedly beyond tile capacity (capped at 12 visual instances for performance)
+- **My Ocean**: scroll to zoom and drag to pan the ocean view
+
+### Added
+- `timer_seconds` stat saved per user — tracks total dive timer time across sessions
+- `grid_tiles` saved per user — island shape is persistent and only ever grows
+
 ## [0.6.1] — 2026-04-19
 
 ### Fixed

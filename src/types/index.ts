@@ -56,6 +56,8 @@ export type SprintReview = {
   createdAt: string;
 };
 
+export type GridTile = { col: number; row: number }
+
 export type SeaFloorState = {
   id: string;
   userId: string;
