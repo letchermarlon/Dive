@@ -128,6 +128,9 @@ function IsoFish({ yPos, dur, delay, rtl, small }: FishCfg) {
   const fin  = small ? '#9acae8' : '#205c8a'
   return (
     <g>
+      <animate attributeName="opacity"
+        values="0;1;1;0" keyTimes="0;0.12;0.88;1"
+        dur={`${dur}s`} begin={`-${delay}s`} repeatCount="indefinite" />
       <animateTransform attributeName="transform" type="translate"
         from={rtl ? `${FISH_RANGE} 0` : `${-FISH_RANGE} 0`}
         to={rtl ? `${-FISH_RANGE} 0` : `${FISH_RANGE} 0`}
