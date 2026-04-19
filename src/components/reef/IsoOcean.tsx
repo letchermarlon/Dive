@@ -196,7 +196,6 @@ export default function IsoOcean({ progressScore, healthScore, streakDays = 0 }:
     jellyfish: s >= 9,
   }
 
-  const unlockedCount = [show.rocks, show.seaweed1, show.coralSm1, show.fish1, show.coralLg1, show.jellyfish].filter(Boolean).length
   const alpha = Math.max(0.45, healthScore / 100)
 
   return (
@@ -279,8 +278,7 @@ export default function IsoOcean({ progressScore, healthScore, streakDays = 0 }:
       {/* HUD */}
       <div style={{ position: 'absolute', top: 14, left: 16, display: 'flex', gap: 16 }}>
         {[
-          { val: progressScore, label: 'progress' },
-          { val: unlockedCount, label: 'unlocked' },
+          { val: progressScore, label: 'tasks complete' },
           { val: `${streakDays}d`, label: 'streak 🔥' },
         ].map(({ val, label }) => (
           <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -288,15 +286,6 @@ export default function IsoOcean({ progressScore, healthScore, streakDays = 0 }:
             <span style={{ fontSize: 10, color: 'rgba(187,225,250,0.5)' }}>{label}</span>
           </div>
         ))}
-      </div>
-      <div style={{ position: 'absolute', top: 14, right: 16, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase', color: 'rgba(187,225,250,0.6)' }}>Ocean Health</span>
-        <div style={{ width: 90, height: 6, background: 'rgba(0,0,0,0.3)', borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${healthScore}%`, background: 'linear-gradient(90deg,#3282b8,#bbe1fa)', borderRadius: 3, transition: 'width 0.5s ease' }} />
-        </div>
-        <span style={{ fontSize: 10, color: 'rgba(187,225,250,0.5)' }}>
-          {progressScore < 9 ? `${9 - progressScore} pts to unlock jellyfish` : '🎉 fully unlocked'}
-        </span>
       </div>
 
       <style>{`

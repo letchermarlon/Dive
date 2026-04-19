@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import SeaFloor from '@/components/reef/SeaFloor'
+import ActivityGrid from '@/components/team/ActivityGrid'
+import InviteSection from '@/components/team/InviteSection'
+import { getProgressLabel } from '@/lib/progression'
 
 export default async function TeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -8,52 +12,103 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in')
 
-  const { data: members } = await supabaseAdmin
-    .from('project_members')
-    .select('user_id, role, profiles(username, email)')
-    .eq('project_id', id)
-
-  const userIds = members?.map(m => m.user_id) ?? []
-
-  const [{ data: stats }, { data: sprints }] = await Promise.all([
-    userIds.length > 0
-      ? supabaseAdmin.from('team_stats').select('*').eq('project_id', id).in('user_id', userIds)
-      : Promise.resolve({ data: [] }),
-    supabaseAdmin.from('sprints').select('*').eq('project_id', id).eq('status', 'active').limit(1),
+  const [
+    { data: members },
+    { data: stats },
+    { data: seafloors },
+    { data: tasks },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('project_members')
+      .select('user_id, role, profiles(username, email)')
+      .eq('project_id', id),
+    supabaseAdmin
+      .from('team_stats')
+      .select('*')
+      .eq('project_id', id),
+    supabaseAdmin
+      .from('seafloor_state')
+      .select('*')
+      .eq('project_id', id),
+    supabaseAdmin
+      .from('tasks')
+      .select('completed_at')
+      .eq('project_id', id)
+      .eq('status', 'done')
+      .not('completed_at', 'is', null),
   ])
 
-  const sprint = sprints?.[0] ?? null
-  const startedAt = sprint?.started_at ? new Date(sprint.started_at) : new Date()
-  const daysLeft = Math.max(0, 14 - Math.floor((Date.now() - startedAt.getTime()) / (1000 * 60 * 60 * 24)))
+  // Enrich members with stats + ocean data
+  const enriched = (members ?? []).map(m => {
+    const profile = m.profiles as unknown as { username: string; email: string }
+    const stat = (stats ?? []).find(s => s.user_id === m.user_id)
+    const floor = (seafloors ?? []).find(f => f.user_id === m.user_id)
+    return {
+      userId: m.user_id,
+      role: m.role as 'owner' | 'member',
+      name: profile?.username ?? profile?.email?.split('@')[0] ?? 'Unknown',
+      completedTasks: stat?.completed_tasks ?? 0,
+      focusSessions: stat?.focus_sessions ?? 0,
+      consistencyScore: stat?.consistency_score ?? 0,
+      progressScore: floor?.progress_score ?? 0,
+      healthScore: floor?.health_score ?? 100,
+      streakDays: floor?.streak_days ?? 0,
+      isCurrentUser: m.user_id === user.id,
+    }
+  })
 
-  const ranked = (members ?? [])
-    .map(m => {
-      const profile = m.profiles as unknown as { username: string; email: string }
-      const stat = (stats ?? []).find(s => s.user_id === m.user_id)
-      return {
-        userId: m.user_id,
-        role: m.role,
-        name: profile?.username ?? profile?.email?.split('@')[0] ?? 'Unknown',
-        completedTasks: stat?.completed_tasks ?? 0,
-        focusSessions: stat?.focus_sessions ?? 0,
-        consistencyScore: stat?.consistency_score ?? 0,
-        isCurrentUser: m.user_id === user.id,
-      }
-    })
-    .sort((a, b) => b.completedTasks - a.completedTasks)
+  // Rank by completed tasks
+  const ranked = [...enriched].sort((a, b) => b.completedTasks - a.completedTasks)
 
-  const medals = ['🥇', '🥈', '🥉']
-  const medalColor = ['#ffd700', '#c0c0c0', '#cd7f32']
+  // Top 3 by ocean progress score
+  const oceanTop3 = [...enriched]
+    .sort((a, b) => b.progressScore - a.progressScore)
+    .slice(0, 3)
+
+  // Activity heatmap data from completed_at timestamps
+  const activityMap: Record<string, number> = {}
+  for (const task of tasks ?? []) {
+    if (task.completed_at) {
+      const date = (task.completed_at as string).split('T')[0]
+      activityMap[date] = (activityMap[date] ?? 0) + 1
+    }
+  }
+  const activityDays = Object.entries(activityMap).map(([date, count]) => ({ date, count }))
+
+  // Insights aggregation
+  const totalTasks = enriched.reduce((a, m) => a + m.completedTasks, 0)
+  const totalSessions = enriched.reduce((a, m) => a + m.focusSessions, 0)
+  const totalHours = Math.round((totalSessions * 25) / 60 * 10) / 10
+  const avgConsistency = enriched.length > 0
+    ? Math.round(enriched.reduce((a, m) => a + m.consistencyScore, 0) / enriched.length)
+    : 0
+
+  const mostActiveEntry = [...activityDays].sort((a, b) => b.count - a.count)[0]
+  const mostActiveDayLabel = mostActiveEntry
+    ? new Date(mostActiveEntry.date + 'T12:00:00').toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric',
+      })
+    : '—'
+
+  const medalColors = ['#ffd700', '#c0c0c0', '#cd7f32']
+  const medalLabels = ['1st', '2nd', '3rd']
 
   function initials(name: string) {
     return name.slice(0, 2).toUpperCase()
   }
 
+  const insightStats = [
+    { label: 'TOTAL HOURS', value: totalHours.toFixed(1), unit: 'h' },
+    { label: 'SESSIONS', value: String(totalSessions), unit: '' },
+    { label: 'AVG SESSION', value: '25', unit: 'm' },
+    { label: 'CONSISTENCY', value: String(avgConsistency), unit: '%' },
+  ]
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Topbar */}
       <div
-        className="flex items-center justify-between px-7 py-4 flex-shrink-0"
+        className="flex items-center gap-3 px-7 py-4 flex-shrink-0"
         style={{
           borderBottom: '1px solid rgba(187,225,250,0.12)',
           background: 'rgba(13,31,38,0.7)',
@@ -61,139 +116,297 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
         }}
       >
         <div>
-          <div className="font-semibold text-lg" style={{ color: '#bbe1fa' }}>Team Rankings</div>
+          <div className="font-semibold text-lg" style={{ color: '#bbe1fa' }}>Team</div>
           <div className="text-xs mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>
-            Who&apos;s leading the sprint?
+            {enriched.length} member{enriched.length !== 1 ? 's' : ''}
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(187,225,250,0.12) transparent' }}>
-        <div className="px-7 py-5">
-          {/* AI chip */}
-          <div className="mb-5">
+      {/* Scrollable content */}
+      <div
+        className="flex-1 overflow-y-auto px-7 py-5"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(187,225,250,0.12) transparent' }}
+      >
+        <div className="flex flex-col gap-5">
+
+          {/* Row 1: Members list + Ocean leaderboard */}
+          <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+
+            {/* Members */}
             <div
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]"
-              style={{
-                background: 'rgba(50,130,184,0.15)',
-                border: '1px solid rgba(50,130,184,0.3)',
-                color: '#bbe1fa',
-              }}
+              className="rounded-xl p-4"
+              style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
             >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#bbe1fa', animation: 'pulse 2s ease infinite' }} />
-              {ranked.length} team members · {sprint?.title ?? 'Sprint'} ends in {daysLeft} days
+              <div
+                className="text-[10px] font-semibold uppercase tracking-wider mb-3"
+                style={{ color: 'rgba(187,225,250,0.45)' }}
+              >
+                Members
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {ranked.map((member, i) => (
+                  <div key={member.userId} className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #0f4c75, #3282b8)', color: '#bbe1fa' }}
+                    >
+                      {initials(member.name)}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-medium" style={{ color: '#bbe1fa' }}>
+                          {member.name}
+                        </span>
+                        {member.isCurrentUser && (
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(50,130,184,0.2)', color: 'rgba(187,225,250,0.55)' }}
+                          >
+                            you
+                          </span>
+                        )}
+                        {member.role === 'owner' && (
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(255,215,0,0.1)', color: 'rgba(255,215,0,0.65)' }}
+                          >
+                            owner
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] mt-0.5" style={{ color: 'rgba(187,225,250,0.4)' }}>
+                        {member.completedTasks} done · {member.focusSessions} dives · {member.streakDays}d streak
+                      </div>
+                    </div>
+
+                    {/* Rank */}
+                    <div
+                      className="text-xs font-bold flex-shrink-0 w-8 text-center"
+                      style={{ color: i < 3 ? medalColors[i] : 'rgba(187,225,250,0.25)' }}
+                    >
+                      #{i + 1}
+                    </div>
+                  </div>
+                ))}
+
+                {enriched.length === 0 && (
+                  <p className="text-sm py-4 text-center" style={{ color: 'rgba(187,225,250,0.35)' }}>
+                    No members yet
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Ocean leaderboard */}
+            <div
+              className="rounded-xl p-4"
+              style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
+            >
+              <div
+                className="text-[10px] font-semibold uppercase tracking-wider mb-3"
+                style={{ color: 'rgba(187,225,250,0.45)' }}
+              >
+                Ocean leaderboard
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {oceanTop3.map((member, i) => (
+                  <div key={member.userId}>
+                    {/* Member header */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold" style={{ color: medalColors[i] }}>
+                        {medalLabels[i]}
+                      </span>
+                      <span className="text-xs font-medium" style={{ color: '#bbe1fa' }}>
+                        {member.name}
+                        {member.isCurrentUser && (
+                          <span className="ml-1" style={{ color: 'rgba(187,225,250,0.45)', fontWeight: 400 }}>(you)</span>
+                        )}
+                      </span>
+                      <span className="text-[10px] ml-auto" style={{ color: 'rgba(187,225,250,0.4)' }}>
+                        {getProgressLabel(member.progressScore)}
+                      </span>
+                    </div>
+
+                    {/* Mini SeaFloor — clips bottom 90px showing the reef floor */}
+                    <div
+                      className="rounded-lg overflow-hidden"
+                      style={{ height: '90px', position: 'relative' }}
+                    >
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+                        <SeaFloor
+                          progressScore={member.progressScore}
+                          healthScore={member.healthScore}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {oceanTop3.length === 0 && (
+                  <p className="text-sm py-4 text-center" style={{ color: 'rgba(187,225,250,0.35)' }}>
+                    No ocean data yet
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Rankings */}
-          <div className="flex flex-col gap-2 mb-5">
-            {ranked.map((member, i) => (
-              <div
-                key={member.userId}
-                className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all"
-                style={{
-                  background: member.isCurrentUser ? 'rgba(50,130,184,0.15)' : 'rgba(15,76,117,0.25)',
-                  border: `1px solid ${member.isCurrentUser ? 'rgba(50,130,184,0.3)' : 'rgba(187,225,250,0.12)'}`,
-                }}
-              >
-                <div
-                  className="font-bold text-xl w-8 text-center flex-shrink-0"
-                  style={{ color: i < 3 ? medalColor[i] : 'rgba(187,225,250,0.5)', fontFamily: 'var(--font-figtree)' }}
-                >
-                  {i < 3 ? medals[i] : `${i + 1}`}
-                </div>
-                <div
-                  className="w-[42px] h-[42px] rounded-full flex items-center justify-center text-base font-bold flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #0f4c75, #3282b8)', color: '#bbe1fa' }}
-                >
-                  {initials(member.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm" style={{ color: '#bbe1fa' }}>
-                    {member.name}
-                    {member.isCurrentUser && <span className="text-xs ml-2" style={{ color: 'rgba(187,225,250,0.5)' }}>(you)</span>}
-                  </div>
-                  <div className="text-xs mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>
-                    {member.focusSessions} focus sessions · {member.consistencyScore}% consistency
-                  </div>
-                  <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: 'rgba(187,225,250,0.1)' }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${member.consistencyScore}%`, background: 'linear-gradient(90deg, #3282b8, #bbe1fa)' }}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-5 flex-shrink-0">
-                  <div className="text-right">
-                    <div className="font-bold text-lg leading-none" style={{ color: '#bbe1fa', fontFamily: 'var(--font-figtree)' }}>
-                      {member.completedTasks}
-                    </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>tasks done</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-lg leading-none" style={{ color: '#bbe1fa', fontFamily: 'var(--font-figtree)' }}>
-                      {member.focusSessions}
-                    </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: 'rgba(187,225,250,0.5)' }}>focus dives</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Team ocean health */}
+          {/* Row 2: Team activity heatmap */}
           <div
-            className="rounded-xl p-4 mb-4"
+            className="rounded-xl p-5"
             style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
           >
-            <div className="text-sm font-semibold mb-3.5" style={{ color: '#bbe1fa' }}>Team ocean health</div>
-            <div className="grid gap-3.5" style={{ gridTemplateColumns: `repeat(${Math.min(ranked.length, 3)}, 1fr)` }}>
-              {ranked.map(member => (
-                <div key={member.userId} className="text-center">
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: 'rgba(187,225,250,0.45)' }}
+              >
+                Team activity
+              </div>
+              <div className="text-xs" style={{ color: 'rgba(187,225,250,0.35)' }}>
+                {totalTasks} tasks completed total
+              </div>
+            </div>
+            <ActivityGrid days={activityDays} totalTasks={totalTasks} />
+          </div>
+
+          {/* Row 3: Insights */}
+          <div
+            className="rounded-xl p-5"
+            style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
+          >
+            <div
+              className="text-[10px] font-semibold uppercase tracking-wider mb-4"
+              style={{ color: 'rgba(187,225,250,0.45)' }}
+            >
+              Insights
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {insightStats.map(stat => (
+                <div
+                  key={stat.label}
+                  className="rounded-lg p-3 text-center"
+                  style={{ background: 'rgba(13,31,38,0.6)', border: '1px solid rgba(187,225,250,0.08)' }}
+                >
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2"
-                    style={{ background: 'linear-gradient(135deg, #0f4c75, #3282b8)', color: '#bbe1fa' }}
+                    className="font-bold leading-none mb-1.5"
+                    style={{ color: '#e74c3c', fontSize: '1.4rem', fontFamily: 'var(--font-figtree)' }}
                   >
-                    {initials(member.name)}
+                    {stat.value}{stat.unit}
                   </div>
-                  <div className="text-xs font-semibold mb-1" style={{ color: '#bbe1fa' }}>{member.name}</div>
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(187,225,250,0.1)' }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${member.consistencyScore}%`, background: 'linear-gradient(90deg, #3282b8, #bbe1fa)' }}
-                    />
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: 'rgba(187,225,250,0.5)' }}>
-                    {member.consistencyScore}% healthy
+                  <div
+                    className="font-semibold uppercase"
+                    style={{ fontSize: '9px', letterSpacing: '0.08em', color: 'rgba(187,225,250,0.4)' }}
+                  >
+                    {stat.label}
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Most active day callout */}
+            {mostActiveEntry && (
+              <div
+                className="mt-3 rounded-lg px-4 py-2.5 flex items-center gap-3"
+                style={{ background: 'rgba(13,31,38,0.6)', border: '1px solid rgba(187,225,250,0.08)' }}
+              >
+                <span style={{ fontSize: '1.1rem' }}>🔥</span>
+                <div>
+                  <span className="text-xs font-semibold" style={{ color: '#bbe1fa' }}>Most active day: </span>
+                  <span className="text-xs" style={{ color: 'rgba(187,225,250,0.6)' }}>
+                    {mostActiveDayLabel} — {mostActiveEntry.count} task{mostActiveEntry.count !== 1 ? 's' : ''} completed
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Invite */}
+          {/* Row 4: Recent sessions — placeholder for Aman's agent */}
           <div
-            className="rounded-xl p-4"
+            className="rounded-xl p-5"
             style={{ background: 'rgba(15,76,117,0.25)', border: '1px solid rgba(187,225,250,0.12)' }}
           >
-            <div className="text-sm font-semibold mb-2" style={{ color: '#bbe1fa' }}>Invite teammates</div>
-            <p className="text-xs mb-2" style={{ color: 'rgba(187,225,250,0.5)' }}>
-              Share this project ID — teammates can join at <span style={{ color: '#bbe1fa' }}>/join/{id}</span>
-            </p>
-            <code
-              className="block rounded-lg px-3 py-2 text-xs break-all"
-              style={{ background: 'rgba(0,0,0,0.3)', color: '#bbe1fa', border: '1px solid rgba(187,225,250,0.12)' }}
-            >
-              {id}
-            </code>
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: 'rgba(187,225,250,0.45)' }}
+              >
+                Recent sessions
+              </div>
+              {/*
+                TODO [Aman's agent]: Add a "Start session" button here once the FocusModal
+                is wired up and session tracking is complete.
+              */}
+            </div>
+
+            {/*
+              TODO [Aman's agent]: Implement the session list in this section.
+
+              HANDOFF NOTES:
+              ─────────────────────────────────────────────────────────────────
+              Goal: Show the team's most recent focus sessions (last ~10),
+              each clickable to reveal an AI-generated summary.
+
+              DATA QUERY (add to the Promise.all at the top of this page):
+                supabaseAdmin
+                  .from('focus_sessions')
+                  .select('id, user_id, task_id, duration_minutes, status, started_at, ended_at')
+                  .eq('project_id', id)
+                  .eq('status', 'completed')
+                  .order('started_at', { ascending: false })
+                  .limit(10)
+
+              Join with tasks to get the task title, and with profiles to get the username.
+
+              EACH SESSION ROW should display:
+                - Member avatar (initials) + username
+                - Task name (from tasks table via task_id)
+                - Duration in minutes
+                - Relative timestamp ("2h ago", "yesterday", etc.)
+
+              ON CLICK → open a modal showing an AI summary including:
+                - Session focus rating (if tab-focus tracking exists, use focus_pct)
+                - Number of tasks the user moved to Done during this session
+                - Session duration
+                - Any insights (was this a focused deep work session? lots of interruptions?)
+
+              AI SUMMARY:
+                - Generate on-demand when the modal is opened (cache result in Supabase)
+                - Use generateJSON<T>() from src/lib/gemini.ts
+                - Keep the prompt in src/lib/prompts.ts (add a SESSION_SUMMARY prompt)
+                - Schema suggestion: { focusRating: number, tasksCompleted: number, summary: string, highlights: string[] }
+
+              SCHEMA NOTE:
+                The focus_sessions table (supabase/schema.sql) currently has:
+                  id, user_id, task_id, project_id, duration_minutes, status, started_at, ended_at
+                You may need to add: tasks_completed (int), focus_pct (float) columns if tracking those.
+
+              COMPONENT: Create src/components/team/RecentSessions.tsx (client component)
+                         and import it here.
+              ─────────────────────────────────────────────────────────────────
+            */}
+
+            <div className="flex flex-col items-center justify-center py-8 gap-2.5">
+              <div style={{ fontSize: '2rem' }}>⏱</div>
+              <p className="text-sm font-medium" style={{ color: 'rgba(187,225,250,0.4)' }}>
+                Session tracking coming soon
+              </p>
+              <p className="text-xs text-center max-w-xs" style={{ color: 'rgba(187,225,250,0.25)' }}>
+                Focus sessions will appear here with AI summaries once the timer feature is complete.
+              </p>
+            </div>
           </div>
+
+          {/* Row 5: Invite */}
+          <InviteSection projectId={id} />
+
         </div>
       </div>
-
-      <style>{`
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-      `}</style>
     </div>
   )
 }

@@ -4,6 +4,20 @@ User-facing record of what has been added, changed, or fixed.
 
 ---
 
+## [0.5.0] — 2026-04-19
+
+### Changed
+- **Team page**: full overhaul — member list, ocean leaderboard with live reef previews, GitHub-style activity heatmap, insights stats, revamped invite section with copy buttons
+- Dashboard "Sprint Board" button renamed to "Board"
+
+### Added
+- Ocean leaderboard: top 3 members by reef progress score with mini SeaFloor previews
+- Team activity grid: 52-week heatmap of task completions
+- Insights panel: total hours, sessions, avg session length, consistency score, most active day
+- Invite section: copy join link or project ID with one click
+
+---
+
 ## [0.4.0] — 2026-04-19
 
 ### Changed
