@@ -15,8 +15,7 @@ export default function TopNav() {
 
   return (
     <nav
-      className="flex items-center justify-between px-6 py-3"
-      style={{ borderBottom: '1px solid rgba(187,225,250,0.12)', background: 'rgba(13,31,38,0.9)' }}
+      className="flex items-center justify-between px-6 py-3 border-b border-white/10 backdrop-blur-md bg-black/20"
     >
       <Link href="/dashboard" className="flex items-center gap-2">
         <div
